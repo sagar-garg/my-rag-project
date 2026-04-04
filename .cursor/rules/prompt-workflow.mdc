@@ -1,0 +1,16 @@
+---
+description: Maintain prompt and checkpoint workflow after substantial chats
+alwaysApply: true
+---
+
+# Prompt Workflow
+
+At the end of a substantial chat:
+
+- Update durable learnings in the appropriate files under `docs/`.
+- Update `prompts/current/project-state.md` if the repo state changed.
+- Update `prompts/current/next-chat.md` with the best next prompt.
+- Update `prompts/current/backlog.md` if priorities changed.
+- Add a short checkpoint under `docs/checkpoints/` when a milestone is reached.
+
+Do not rewrite archived prompt files after they are archived.

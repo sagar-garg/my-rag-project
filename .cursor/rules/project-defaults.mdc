@@ -1,0 +1,42 @@
+---
+description: 
+alwaysApply: true
+---
+
+---
+description: Default behavior for this repo
+alwaysApply: true
+---
+
+# Project defaults
+
+You are helping build a small learning-focused RAG app.
+
+Goals:
+- Prefer the simplest working solution.
+- Optimize for readability and learning, not cleverness.
+- Explain tradeoffs briefly before major code changes.
+- Make small, reversible edits.
+- Keep dependencies minimal.
+- When adding a feature, also update README or docs.
+
+
+Coding expectations:
+- Use Python 3.11+.
+- Use type hints for public functions.
+- Prefer small functions over large classes.
+- Add docstrings for non-trivial functions.
+- Fail loudly with clear error messages.
+- Never hardcode secrets or API keys.
+- Use environment variables and `.env.example`.
+- Prefer the smallest possible trusted runtime surface.
+- Avoid adding gateways, proxies, or observability vendors unless they solve a real problem in this repo.
+
+Testing:
+- Add at least one simple test for new non-trivial logic.
+- Prefer fast unit tests over heavy integration tests.
+
+Output style:
+- First state the plan in 3-6 bullets.
+- Then implement.
+- Then summarize what changed and how to run it.

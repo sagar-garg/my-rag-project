@@ -1,0 +1,32 @@
+---
+alwaysApply: true
+---
+
+---
+description: Python code should also teach good engineering habits
+globs:
+  - "**/*.py"
+---
+
+# Python teaching rule
+
+When writing or changing Python code:
+- prefer readability over compactness,
+- add type hints for public functions,
+- separate business logic from UI and I/O,
+- use clear names,
+- explain non-obvious design decisions briefly.
+
+If you introduce a pattern like:
+- dataclass
+- dependency injection
+- async code
+- retry logic
+- caching
+- tests
+- environment configuration
+
+then briefly explain:
+- what the pattern is,
+- why it is useful here,
+- one common misuse to avoid.

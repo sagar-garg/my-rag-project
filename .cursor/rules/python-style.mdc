@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+---
+
+---
+description: Python coding conventions for app code
+globs:
+  - "**/*.py"
+---
+
+# Python style
+
+Write Python that is easy to learn from.
+
+Rules:
+- Use pathlib instead of os.path where practical.
+- Prefer dataclasses or TypedDict over ad-hoc dicts for structured data.
+- Keep functions under ~40 lines when possible.
+- Separate concerns:
+  - ingestion
+  - indexing
+  - retrieval
+  - generation
+  - evaluation
+  - UI
+- Avoid deeply nested logic.
+- Add comments only when they help understanding.
+- Prefer explicit names over abbreviations.
+- Preserve imports order and remove unused imports.
