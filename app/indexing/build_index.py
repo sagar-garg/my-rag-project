@@ -20,11 +20,16 @@ class IndexBuildResult:
 def build_index(config: AppConfig) -> IndexBuildResult:
     """Load raw documents, chunk them, embed them, and store them in Qdrant."""
 
-    documents = load_source_documents(config.raw_data_dir)
+    documents = load_source_documents(
+        config.raw_data_dir,
+        allowed_file_names=set(config.source_file_names),
+    )
     if not documents:
+        selected_files = ", ".join(config.source_file_names)
         raise ValueError(
             f"No supported files were found in `{config.raw_data_dir}`. "
-            "Add .md, .txt, .pdf, or .docx files first."
+            "Add .md, .txt, .pdf, or .docx files first. "
+            f"Current source filter: {selected_files}."
         )
 
     chunks = chunk_documents(

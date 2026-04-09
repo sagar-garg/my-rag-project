@@ -26,22 +26,23 @@ Build a simple educational RAG app in 1-2 weeks.
 - Show sources in Streamlit
 
 ## Current status
-- The first milestone now works end to end on a small smoke-test corpus.
-- The initial corpus is the repo's own markdown docs copied into `data/raw/docs/`.
-- Azure embeddings, Qdrant indexing, retrieval, grounded generation, and source display all work together.
+- The app now uses a narrow three-document PDF corpus from Chapters 4, 5, and 6 of the book in `data/raw/docs/`.
+- Azure embeddings, Qdrant indexing, retrieval, grounded generation, and source display all work together on this corpus.
+- A tiny hand-written evaluation starter set now lives in `data/eval/chapters_4_6_starter.json`.
 
 ## What we learned from milestone one
 - Keep the first corpus small and inspectable so debugging stays about the pipeline, not messy documents.
 - Retrieval can work even when generation is broken, so test those stages separately.
 - Azure embedding setup and Azure Responses API setup have different failure modes.
 - Running the app locally from `.venv` is simpler to reason about than relying on assistant-managed long-running processes.
+- Explicit corpus selection matters once `data/raw/` starts to accumulate more files.
 
 ## Later improvements
 - metadata filters
 - hybrid retrieval
 - better chunking
-- Ragas evaluation
+- richer Ragas evaluation
 
 ## Next natural step
-- Move from the smoke-test corpus to a narrow set of public job-related documents.
-- Add a tiny hand-written evaluation set so retrieval and answer quality can be judged intentionally rather than by impression alone.
+- Run the starter evaluation set against real retrieval outputs and inspect which questions miss their target chapter.
+- Improve chunking only after the chapter-based baseline has been measured.

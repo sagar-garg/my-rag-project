@@ -10,7 +10,11 @@ from pypdf import PdfReader
 SUPPORTED_EXTENSIONS = {".md", ".txt", ".pdf", ".docx"}
 
 
-def load_source_documents(data_directory: Path) -> list[Document]:
+def load_source_documents(
+    data_directory: Path,
+    *,
+    allowed_file_names: set[str] | None = None,
+) -> list[Document]:
     """Load supported local files into LlamaIndex documents."""
 
     if not data_directory.exists():
@@ -21,7 +25,12 @@ def load_source_documents(data_directory: Path) -> list[Document]:
     source_files = sorted(
         path
         for path in data_directory.rglob("*")
-        if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
+        if path.is_file()
+        and path.suffix.lower() in SUPPORTED_EXTENSIONS
+        and (
+            allowed_file_names is None
+            or path.name in allowed_file_names
+        )
     )
 
     documents: list[Document] = []

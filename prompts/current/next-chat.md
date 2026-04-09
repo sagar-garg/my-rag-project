@@ -6,15 +6,17 @@ Also read:
 - `prompts/current/project-state.md`
 - `prompts/current/backlog.md`
 
-Now help me replace the smoke-test corpus with a narrow set of public job-related documents and add a tiny evaluation starter set.
+Now help me run and inspect the starter evaluation set for the current chapter-based corpus.
 
 Goals:
-- choose a small, focused, public document set
-- explain why it is a good RAG corpus
-- add a small hand-written evaluation set
-- keep the implementation simple and educational
+
+- use the existing Chapters 4-6 corpus baseline
+- run retrieval against the starter evaluation questions
+- inspect which questions hit the expected chapter sources
+- keep the workflow simple and educational
 
 Requirements:
+
 - give a short plan first
 - update docs with durable learnings
 - teach me briefly when important decisions are made

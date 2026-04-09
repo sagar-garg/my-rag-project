@@ -2,16 +2,16 @@
 
 ## Near-term priorities
 
-- Replace the smoke-test corpus with a narrow public job-related corpus.
-- Add a tiny evaluation dataset with expected answers and target sources.
-- Improve chunking once we have a more realistic corpus and can measure retrieval quality.
+- Run the chapter-based starter evaluation set against real retrieval outputs.
+- Improve chunking once we have measured the Chapters 4-6 baseline.
+- Add a small script or command for running evaluation outside the UI.
 
 ## Medium-term ideas
 
 - Add a simple debug toggle in Streamlit to show retrieved chunks more explicitly.
-- Add a small script or command for running evaluation outside the UI.
 - Add metadata filters if the next corpus has clear document categories.
 - Add better chunking heuristics for longer documents.
+- Expand the starter evaluation set once the first misses are understood.
 
 ## Later ideas
 

@@ -6,6 +6,7 @@
 - Azure OpenAI embeddings and Responses API are both working.
 - Qdrant Cloud indexing and retrieval are working.
 - Streamlit UI works when run locally from the repo `.venv`.
+- Default corpus now uses three book chapters with a tiny starter evaluation set.
 
 ## Current architecture
 
@@ -18,8 +19,12 @@
 
 ## Current corpus
 
-- Smoke-test corpus uses repo markdown docs copied into `data/raw/docs/`.
-- This corpus is intentionally small and easy to inspect.
+- Default corpus uses only these files from `data/raw/docs/`:
+  - `Chapter_4_Evaluate_AI_Systems.pdf`
+  - `Chapter_5_Prompt_Engineering.pdf`
+  - `Chapter_6_RAG_and_Agents.pdf`
+- `SOURCE_FILE_NAMES` keeps the active corpus explicit even if other raw files exist.
+- Starter evaluation cases live in `data/eval/chapters_4_6_starter.json`.
 
 ## Known-good local workflow
 
@@ -35,6 +40,7 @@ source .venv/bin/activate
 - `AZURE_OPENAI_API_VERSION=2025-03-01-preview` or later is required for `responses.create()`.
 - Qdrant Cloud uses a full HTTPS endpoint in `QDRANT_URL`.
 - `QDRANT_COLLECTION_NAME` is an application collection name, not the cluster name.
+- When the corpus changes, use a fresh collection name or clear the old collection to avoid stale vectors.
 
 ## Current constraints
 
@@ -49,8 +55,9 @@ source .venv/bin/activate
 - Retrieval and generation should be debugged as separate stages.
 - Running the app in your own terminal is easier to reason about than assistant-managed background processes.
 - Streamlit file entrypoints can cause import-path issues if naming conflicts with package names.
+- A tiny gold evaluation set is enough to start checking whether retrieval hits the intended chapter.
 
 ## Best next project direction
 
-- Replace the smoke-test corpus with a narrow set of public job-related documents.
-- Add a tiny hand-written evaluation set so retrieval quality can be judged intentionally.
+- Run the starter evaluation set against real retrieval outputs and inspect misses by chapter.
+- Improve chunking only after measuring the new chapter-based baseline.

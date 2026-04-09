@@ -1,0 +1,30 @@
+[
+  {
+    "question": "What does evaluation-driven development mean in the book?",
+    "reference_answer": "Evaluation-driven development means defining how an AI application will be evaluated before building it, similar to how test-driven development writes tests before code.",
+    "target_sources": [
+      "Chapter_4_Evaluate_AI_Systems.pdf"
+    ]
+  },
+  {
+    "question": "Why should teams make the most of prompting before moving to finetuning?",
+    "reference_answer": "The chapter says prompt engineering is the easiest and most common model adaptation technique because it guides behavior without changing model weights, so teams should exhaust prompting before using more resource-intensive methods like finetuning.",
+    "target_sources": [
+      "Chapter_5_Prompt_Engineering.pdf"
+    ]
+  },
+  {
+    "question": "What are the two dominant patterns for context construction described in Chapter 6?",
+    "reference_answer": "Chapter 6 says the two dominant patterns are retrieval-augmented generation (RAG) and agents, where RAG retrieves relevant information from external data sources and agents use tools to gather information or act in the world.",
+    "target_sources": [
+      "Chapter_6_RAG_and_Agents.pdf"
+    ]
+  },
+  {
+    "question": "According to Chapter 6, why does longer context not eliminate the need for RAG?",
+    "reference_answer": "Longer context does not remove the need for RAG because some applications still exceed context limits, long contexts are not always used efficiently, and extra tokens add cost and latency. RAG helps by selecting only the most relevant information for each query.",
+    "target_sources": [
+      "Chapter_6_RAG_and_Agents.pdf"
+    ]
+  }
+]
