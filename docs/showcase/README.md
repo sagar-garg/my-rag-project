@@ -13,3 +13,4 @@ Raw material for the portfolio case study (target: personal website). Collected 
 | Date | Artifact | What it shows |
 |------|----------|---------------|
 | 2026-07-18 | [eval/2026-07-18-baseline.md](eval/2026-07-18-baseline.md) | Baseline retrieval eval: 4/4 hit@4, all first hits at rank 1 — the starter set is saturated; expanding it is the gate for feature work |
+| 2026-07-18 | [eval/2026-07-18-expanded-set.md](eval/2026-07-18-expanded-set.md) | Eval set expanded 4 → 15 hard questions: hit@4 is structurally saturated at chapter level (3-file corpus), so purity (55/60) and first-hit rank (worst: 2) become the feature-gating metrics; Ch5/Ch6 vocabulary traps worked, semantic paraphrase did not |

@@ -3,8 +3,9 @@
 ## Near-term priorities
 
 - ~~Build the baseline eval runner~~ — done 2026-07-18: 4/4 hit@4, saturated (`docs/showcase/eval/2026-07-18-baseline.md`).
-- **Expand the eval set to ~12–15 harder questions** (no chapter names, paraphrased concepts, Ch5/Ch6 overlap traps). This gates everything below — a saturated eval can't measure improvement.
-- First measured iteration: chunking parameters vs the (new, harder) baseline.
+- ~~Expand the eval set to ~12–15 harder questions~~ — done 2026-07-18: 15 questions (`docs/showcase/eval/2026-07-18-expanded-set.md`). Hit@4 is structurally saturated at chapter level; **purity (55/60) and first-hit rank (worst: 2) are now the gating metrics** for all feature work.
+- **First measured iteration: chunking parameters** vs the 15-question set, judged on purity/first-hit rank. Weak questions to watch: Q3, Q8, Q13.
+- Add aggregate purity + mean first-hit rank to the runner's summary output (makes per-run comparison one-glance).
 
 ## Medium-term (showcase-first, eval-gated — ADR 005)
 
@@ -24,6 +25,7 @@
 
 - Compare chunk sizes/overlaps systematically.
 - Document quality checklist before indexing new corpora.
+- Section-level or chunk-level gold labels — only if purity/rank stop discriminating; would let hit@k actually fail on this corpus.
 
 ## Still out of scope unless clearly needed
 

@@ -3,26 +3,24 @@
 Read `CLAUDE.md`, then:
 
 - `prompts/current/project-state.md`
-- `docs/showcase/eval/2026-07-18-baseline.md` (the baseline artifact — especially Observations)
+- `docs/showcase/eval/2026-07-18-expanded-set.md` (especially Observations — the metric-shift finding)
 
-Now expand the starter eval set — roadmap item 2 of ADR 005.
+Now start the first measured feature iteration — roadmap item 3 of ADR 005: **chunking parameters**.
 
-Context: the baseline is saturated (4/4 hit@4, all rank 1), so the current 4 questions cannot show improvement from any feature. The goal is a ~12–15 question set hard enough to produce real misses.
+Context: the eval set is 15 questions and hit@4 is structurally saturated (100% is unmissable at chapter level on a 3-file corpus). The gating metrics are now **purity** (55/60 = 92%) and **first-hit rank** (worst: 2). The weak questions are Q3 (2/4), Q8 (2/4, rank 2), Q13 (3/4) — all cross-chapter vocabulary confusion between Ch5/Ch6 (and one Ch4 leak).
 
 Goals:
 
-- extend `data/eval/chapters_4_6_starter.json` to ~12–15 questions targeting Chapters 4–6
-- make the new questions genuinely hard for dense retrieval:
-  - no chapter names or numbers in the question wording
-  - paraphrase concepts instead of quoting the chapters' own vocabulary
-  - deliberately mine the Ch5/Ch6 vocabulary overlap (baseline Q3 pulled 2 Ch5 chunks for a Ch6 "context construction" question — that seam is where misses live)
-  - a few multi-hop or cross-chapter questions (`target_sources` supports multiple files)
-- re-run `.venv/bin/python -m scripts.run_starter_eval --out docs/showcase/eval/2026-MM-DD-expanded-set.md` and compare with the baseline
-- update the artifact log in `docs/showcase/README.md` and the timeline in `docs/showcase/case-study.md`
+- sweep 2–3 chunking configurations against the current one (size 512 / overlap 80) — e.g. smaller (256/40) and larger (1024/160); each needs a fresh `QDRANT_COLLECTION_NAME` and a re-index
+- run `scripts.run_starter_eval` per config with `--out docs/showcase/eval/2026-MM-DD-chunking-<size>.md --title "Chunking <size>/<overlap>"`
+- compare on purity and first-hit rank per question (hit@4 will read 100% everywhere — ignore it); does any config clean up Q3/Q8/Q13 or push Q8 back to rank 1?
+- consider extending the runner's summary output with aggregate purity and mean first-hit rank, so per-run tables are directly comparable
+- update the artifact log in `docs/showcase/README.md` and the case-study timeline; if a config wins, record the decision
 
 Requirements:
 
-- give a short plan first; I want to review the draft questions before they're saved (writing good eval questions is the judgment part — that's mine)
-- remember the local embedded Qdrant single-process lock: stop Streamlit first; the eval script and `search_chunks` now share one client
-- no chat-API calls needed — this stays retrieval-only
+- plan first: show me the sweep matrix (configs, collection names, cost estimate — each re-index embeds the full corpus) before touching anything
+- stop Streamlit first (embedded Qdrant single-process lock); share one client
+- embedding calls only (re-index + 15 queries per config) — no chat API
+- append the session's API usage to `docs/costs.md` (running Azure cost ledger)
 - end with /handoff

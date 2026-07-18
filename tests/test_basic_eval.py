@@ -15,10 +15,14 @@ STARTER_EVAL_PATH = PROJECT_ROOT / "data" / "eval" / "chapters_4_6_starter.json"
 def test_load_starter_eval_cases_reads_expected_chapter_sources() -> None:
     cases = load_starter_eval_cases(STARTER_EVAL_PATH)
 
-    assert len(cases) == 4
+    assert len(cases) == 15
     assert cases[0].target_sources == ["Chapter_4_Evaluate_AI_Systems.pdf"]
     assert cases[1].target_sources == ["Chapter_5_Prompt_Engineering.pdf"]
     assert cases[2].target_sources == ["Chapter_6_RAG_and_Agents.pdf"]
+    assert cases[13].target_sources == [
+        "Chapter_5_Prompt_Engineering.pdf",
+        "Chapter_6_RAG_and_Agents.pdf",
+    ]
 
 
 def test_build_eval_sample_copies_reference_fields() -> None:

@@ -67,12 +67,14 @@ def print_report(judgments: list[RetrievalJudgment], top_k: int) -> None:
 def render_markdown(
     judgments: list[RetrievalJudgment],
     config: AppConfig,
+    *,
+    title: str = "Retrieval eval",
 ) -> str:
     hits = sum(1 for judgment in judgments if judgment.hit)
     total = len(judgments)
 
     lines = [
-        f"# Baseline retrieval eval — {date.today().isoformat()}",
+        f"# {title} — {date.today().isoformat()}",
         "",
         f"**Hit rate: {hits}/{total} ({hits / total:.0%})** — hit@{config.top_k}, "
         "retrieval only (no generation).",
@@ -125,6 +127,11 @@ def main() -> None:
         default=DEFAULT_OUTPUT_PATH,
         help="Markdown artifact path (default: docs/showcase/eval/<today>-baseline.md)",
     )
+    parser.add_argument(
+        "--title",
+        default="Retrieval eval",
+        help='Artifact H1 title (default: "Retrieval eval")',
+    )
     args = parser.parse_args()
 
     config = AppConfig.from_env()
@@ -146,7 +153,9 @@ def main() -> None:
     print_report(judgments, config.top_k)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(render_markdown(judgments, config), encoding="utf-8")
+    args.out.write_text(
+        render_markdown(judgments, config, title=args.title), encoding="utf-8"
+    )
     print(f"\nArtifact written: {args.out}")
 
 
