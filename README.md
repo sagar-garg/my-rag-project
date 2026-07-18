@@ -71,7 +71,7 @@ Fill in `.env` with:
 - Azure OpenAI endpoint, API version, API key
 - Azure OpenAI chat deployment name
 - Azure OpenAI embedding deployment name
-- Qdrant URL and optional API key
+- Qdrant storage: either `QDRANT_LOCAL_PATH` for a local embedded store (default, no server needed) or `QDRANT_URL` plus optional API key for Qdrant Cloud
 
 The values in `.env.example` are the contract the app expects. Keep secrets in `.env`, never commit that file.
 
@@ -107,7 +107,7 @@ The current default setup uses:
 - `SOURCE_FILE_NAMES=Chapter_4_Evaluate_AI_Systems.pdf,Chapter_5_Prompt_Engineering.pdf,Chapter_6_RAG_and_Agents.pdf`
 - Azure chat and embedding deployments configured separately
 - `AZURE_OPENAI_API_VERSION=2025-03-01-preview`
-- Qdrant Cloud with a full HTTPS endpoint in `QDRANT_URL`
+- `QDRANT_LOCAL_PATH=qdrant_data` (local embedded store; Qdrant Cloud via `QDRANT_URL` remains supported)
 - `QDRANT_COLLECTION_NAME=book_chapters_4_6`
 
 Good first questions:
@@ -125,6 +125,7 @@ The original smoke test used repo markdown docs copied into `data/raw/docs/`. Th
 - If retrieval works but generation fails, check `AZURE_OPENAI_API_VERSION` before changing prompts.
 - If Streamlit import errors mention `app`, make sure the entrypoint is `app/ui/streamlit_app.py`.
 - For local testing, prefer running the app from your own terminal inside `.venv`.
+- The local embedded Qdrant store allows only one process at a time. Stop the Streamlit app before running `build_index` or `scripts.inspect_store` (and vice versa), or you will hit a storage lock error.
 
 ## Run tests
 

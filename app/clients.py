@@ -19,7 +19,14 @@ def build_azure_openai_client(config: AppConfig) -> AzureOpenAI:
 
 
 def build_qdrant_client(config: AppConfig) -> QdrantClient:
-    """Create the Qdrant client used for indexing and retrieval."""
+    """Create the Qdrant client used for indexing and retrieval.
+
+    Uses a local embedded store (a folder on disk) when
+    `qdrant_local_path` is set; otherwise connects to Qdrant Cloud.
+    """
+
+    if config.qdrant_local_path:
+        return QdrantClient(path=config.qdrant_local_path)
 
     return QdrantClient(
         url=config.qdrant_url,

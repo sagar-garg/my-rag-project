@@ -26,8 +26,9 @@ class AppConfig:
     azure_openai_api_version: str
     chat_deployment_name: str
     embedding_deployment_name: str
-    qdrant_url: str
+    qdrant_url: str | None
     qdrant_api_key: str | None
+    qdrant_local_path: str | None
     qdrant_collection_name: str
     raw_data_dir: Path
     processed_data_dir: Path
@@ -44,24 +45,27 @@ class AppConfig:
         resolved_env_path = env_path or PROJECT_ROOT / ".env"
         load_dotenv(resolved_env_path if resolved_env_path.exists() else None)
 
-        missing_values = [
-            name
-            for name in (
-                "AZURE_OPENAI_API_KEY",
-                "AZURE_OPENAI_ENDPOINT",
-                "AZURE_OPENAI_API_VERSION",
-                "AZURE_OPENAI_CHAT_DEPLOYMENT",
-                "AZURE_OPENAI_EMBEDDING_DEPLOYMENT",
-                "QDRANT_URL",
-            )
-            if not os.getenv(name)
+        required_names = [
+            "AZURE_OPENAI_API_KEY",
+            "AZURE_OPENAI_ENDPOINT",
+            "AZURE_OPENAI_API_VERSION",
+            "AZURE_OPENAI_CHAT_DEPLOYMENT",
+            "AZURE_OPENAI_EMBEDDING_DEPLOYMENT",
         ]
+        # Vector store can be either Qdrant Cloud (QDRANT_URL) or a local
+        # embedded folder (QDRANT_LOCAL_PATH). Exactly one must be set.
+        qdrant_local_path = os.getenv("QDRANT_LOCAL_PATH")
+        if not qdrant_local_path:
+            required_names.append("QDRANT_URL")
 
+        missing_values = [name for name in required_names if not os.getenv(name)]
         if missing_values:
             missing_text = ", ".join(missing_values)
             raise ValueError(
                 "Missing required environment variables: "
-                f"{missing_text}. Copy `.env.example` to `.env` and fill them in."
+                f"{missing_text}. Copy `.env.example` to `.env` and fill them in. "
+                "(Set either QDRANT_URL for Qdrant Cloud or QDRANT_LOCAL_PATH "
+                "for a local embedded store.)"
             )
 
         return cls(
@@ -72,8 +76,9 @@ class AppConfig:
             embedding_deployment_name=os.environ[
                 "AZURE_OPENAI_EMBEDDING_DEPLOYMENT"
             ],
-            qdrant_url=os.environ["QDRANT_URL"],
+            qdrant_url=os.getenv("QDRANT_URL"),
             qdrant_api_key=os.getenv("QDRANT_API_KEY"),
+            qdrant_local_path=qdrant_local_path,
             qdrant_collection_name=os.getenv(
                 "QDRANT_COLLECTION_NAME",
                 "book_chapters_4_6",
