@@ -2,9 +2,9 @@
 
 ## Near-term priorities
 
-- Build the baseline eval runner (`scripts/run_starter_eval.py`): retrieval-only pass over the starter questions, per-question chapter hit/miss table, saved to `docs/showcase/eval/`.
-- Inspect misses by chapter; expand the starter eval set to ~12–15 questions.
-- First measured iteration: chunking parameters vs the baseline.
+- ~~Build the baseline eval runner~~ — done 2026-07-18: 4/4 hit@4, saturated (`docs/showcase/eval/2026-07-18-baseline.md`).
+- **Expand the eval set to ~12–15 harder questions** (no chapter names, paraphrased concepts, Ch5/Ch6 overlap traps). This gates everything below — a saturated eval can't measure improvement.
+- First measured iteration: chunking parameters vs the (new, harder) baseline.
 
 ## Medium-term (showcase-first, eval-gated — ADR 005)
 

@@ -71,6 +71,41 @@ def load_starter_eval_cases(data_path: Path) -> list[StarterEvalCase]:
     return cases
 
 
+@dataclass(frozen=True)
+class RetrievalJudgment:
+    case: StarterEvalCase
+    retrieved_file_names: list[str]
+    hit: bool
+    first_hit_rank: int | None
+    on_target_count: int
+
+
+def judge_retrieval(
+    case: StarterEvalCase,
+    retrieved_file_names: list[str],
+) -> RetrievalJudgment:
+    """Judge whether retrieval reached the expected source (hit@k).
+
+    A hit means at least one retrieved chunk comes from a file named in
+    `case.target_sources`. Ranks are 1-based.
+    """
+
+    target_names = set(case.target_sources)
+    on_target_ranks = [
+        rank
+        for rank, file_name in enumerate(retrieved_file_names, start=1)
+        if file_name in target_names
+    ]
+
+    return RetrievalJudgment(
+        case=case,
+        retrieved_file_names=list(retrieved_file_names),
+        hit=bool(on_target_ranks),
+        first_hit_rank=on_target_ranks[0] if on_target_ranks else None,
+        on_target_count=len(on_target_ranks),
+    )
+
+
 def build_eval_sample(
     case: StarterEvalCase,
     *,

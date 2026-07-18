@@ -18,7 +18,7 @@ Stack: Python, LlamaIndex Core, Qdrant (local embedded), Azure OpenAI (separate 
 |-----------|------|--------------------|-------|
 | Working skeleton | 2026-04-04 | — | end-to-end pipeline on smoke corpus |
 | Real corpus + gold set | 2026-04-09 | — | chapters 4–6, 4 starter questions |
-| Baseline measured | _pending_ | _pending_ | first honest number |
+| Baseline measured | 2026-07-18 | 4/4 (100%) hit@4 | starter set saturated — all first hits at rank 1; eval set must get harder before features can show gains ([details](eval/2026-07-18-baseline.md)) |
 
 ## Interesting failures and fixes
 

@@ -3,19 +3,26 @@
 Read `CLAUDE.md`, then:
 
 - `prompts/current/project-state.md`
-- `prompts/current/backlog.md`
+- `docs/showcase/eval/2026-07-18-baseline.md` (the baseline artifact — especially Observations)
 
-Now build the baseline evaluation runner — the first roadmap item of ADR 005.
+Now expand the starter eval set — roadmap item 2 of ADR 005.
+
+Context: the baseline is saturated (4/4 hit@4, all rank 1), so the current 4 questions cannot show improvement from any feature. The goal is a ~12–15 question set hard enough to produce real misses.
 
 Goals:
 
-- a script (suggest `scripts/run_starter_eval.py`) that loads the starter eval cases, runs retrieval only (no generation — keep the first pass free of chat-API cost), and reports per-question whether the retrieved chunks come from the expected chapter
-- print a compact hit/miss table and write it as the first artifact to `docs/showcase/eval/2026-MM-DD-baseline.md`
-- update the artifact log in `docs/showcase/README.md` and the timeline table in `docs/showcase/case-study.md`
+- extend `data/eval/chapters_4_6_starter.json` to ~12–15 questions targeting Chapters 4–6
+- make the new questions genuinely hard for dense retrieval:
+  - no chapter names or numbers in the question wording
+  - paraphrase concepts instead of quoting the chapters' own vocabulary
+  - deliberately mine the Ch5/Ch6 vocabulary overlap (baseline Q3 pulled 2 Ch5 chunks for a Ch6 "context construction" question — that seam is where misses live)
+  - a few multi-hop or cross-chapter questions (`target_sources` supports multiple files)
+- re-run `.venv/bin/python -m scripts.run_starter_eval --out docs/showcase/eval/2026-MM-DD-expanded-set.md` and compare with the baseline
+- update the artifact log in `docs/showcase/README.md` and the timeline in `docs/showcase/case-study.md`
 
 Requirements:
 
-- give a short plan first
-- remember the local embedded Qdrant single-process lock: stop Streamlit first
-- teach me briefly at important decisions; prefer small, reversible changes
-- end with /handoff so state files stay current
+- give a short plan first; I want to review the draft questions before they're saved (writing good eval questions is the judgment part — that's mine)
+- remember the local embedded Qdrant single-process lock: stop Streamlit first; the eval script and `search_chunks` now share one client
+- no chat-API calls needed — this stays retrieval-only
+- end with /handoff

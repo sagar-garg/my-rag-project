@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from qdrant_client import QdrantClient
+
 from app.clients import build_qdrant_client, embed_texts
 from app.config import AppConfig
 from app.models import RetrievedChunk
@@ -10,15 +12,20 @@ def search_chunks(
     *,
     config: AppConfig,
     top_k: int | None = None,
+    client: QdrantClient | None = None,
 ) -> list[RetrievedChunk]:
-    """Retrieve the top-k most similar chunks from Qdrant."""
+    """Retrieve the top-k most similar chunks from Qdrant.
+
+    Pass `client` to reuse one connection across calls — required with the
+    local embedded store, which allows only one client instance at a time.
+    """
 
     clean_question = question.strip()
     if not clean_question:
         raise ValueError("Question cannot be empty.")
 
     query_embedding = embed_texts([clean_question], config=config)[0]
-    qdrant_client = build_qdrant_client(config)
+    qdrant_client = client or build_qdrant_client(config)
     search_limit = top_k or config.top_k
 
     search_result = qdrant_client.query_points(
