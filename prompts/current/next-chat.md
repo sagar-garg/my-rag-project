@@ -1,23 +1,21 @@
 # Next Chat Prompt
 
-Read the rules in `.cursor/rules/` and the relevant docs in `docs/`.
-Also read:
+Read `CLAUDE.md`, then:
 
 - `prompts/current/project-state.md`
 - `prompts/current/backlog.md`
 
-Now help me run and inspect the starter evaluation set for the current chapter-based corpus.
+Now build the baseline evaluation runner — the first roadmap item of ADR 005.
 
 Goals:
 
-- use the existing Chapters 4-6 corpus baseline
-- run retrieval against the starter evaluation questions
-- inspect which questions hit the expected chapter sources
-- keep the workflow simple and educational
+- a script (suggest `scripts/run_starter_eval.py`) that loads the starter eval cases, runs retrieval only (no generation — keep the first pass free of chat-API cost), and reports per-question whether the retrieved chunks come from the expected chapter
+- print a compact hit/miss table and write it as the first artifact to `docs/showcase/eval/2026-MM-DD-baseline.md`
+- update the artifact log in `docs/showcase/README.md` and the timeline table in `docs/showcase/case-study.md`
 
 Requirements:
 
 - give a short plan first
-- update docs with durable learnings
-- teach me briefly when important decisions are made
-- prefer small, reversible changes
+- remember the local embedded Qdrant single-process lock: stop Streamlit first
+- teach me briefly at important decisions; prefer small, reversible changes
+- end with /handoff so state files stay current

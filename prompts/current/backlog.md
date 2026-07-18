@@ -2,28 +2,29 @@
 
 ## Near-term priorities
 
-- Run the chapter-based starter evaluation set against real retrieval outputs.
-- Improve chunking once we have measured the Chapters 4-6 baseline.
-- Add a small script or command for running evaluation outside the UI.
+- Build the baseline eval runner (`scripts/run_starter_eval.py`): retrieval-only pass over the starter questions, per-question chapter hit/miss table, saved to `docs/showcase/eval/`.
+- Inspect misses by chapter; expand the starter eval set to ~12–15 questions.
+- First measured iteration: chunking parameters vs the baseline.
 
-## Medium-term ideas
+## Medium-term (showcase-first, eval-gated — ADR 005)
 
-- Add a simple debug toggle in Streamlit to show retrieved chunks more explicitly.
-- Add metadata filters if the next corpus has clear document categories.
-- Add better chunking heuristics for longer documents.
-- Expand the starter evaluation set once the first misses are understood.
+- Hybrid retrieval (dense + sparse) with before/after numbers.
+- Reranking, if eval misses show dense/hybrid retrieval is the bottleneck.
+- Streamlit retrieval inspector: show scores, chunk boundaries, expected-vs-actual sources for eval questions.
+- Answer-quality metrics via Ragas (faithfulness, answer relevancy) once retrieval is stable.
+
+## Showcase pipeline (continuous)
+
+- Deposit an artifact in `docs/showcase/` at every milestone (see CLAUDE.md habit).
+- Architecture diagram exportable for the website.
+- Demo GIF of the UI once the retrieval inspector lands.
+- Case-study draft grows with each measured iteration.
 
 ## Later ideas
 
-- Compare retrieval quality across different chunk sizes and overlaps.
-- Add reranking only if dense retrieval clearly becomes the bottleneck.
-- Add a lightweight document quality checklist before indexing new corpora.
+- Compare chunk sizes/overlaps systematically.
+- Document quality checklist before indexing new corpora.
 
-## Not for v1 unless clearly needed
+## Still out of scope unless clearly needed
 
-- LiteLLM
-- MCP
-- DSPy
-- GraphRAG
-- multi-agent orchestration
-- heavy observability or gateway layers
+- LiteLLM, MCP, DSPy, GraphRAG, multi-agent orchestration, heavy observability layers.

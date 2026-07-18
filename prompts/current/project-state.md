@@ -1,30 +1,23 @@
 # Project State
 
+_Last updated: 2026-07-18 (repo consolidation + showcase-first direction, ADR 005)_
+
 ## Current status
 
 - Minimal learning-first RAG app works end to end.
-- Azure OpenAI embeddings and Responses API are both working.
-- Qdrant Cloud indexing and retrieval are working.
-- Streamlit UI works when run locally from the repo `.venv`.
-- Default corpus now uses three book chapters with a tiny starter evaluation set.
+- Vector store is now a **local embedded Qdrant** (`QDRANT_LOCAL_PATH=qdrant_data`); the cloud cluster was deleted. Single-process caveat: stop Streamlit before running `build_index` or `scripts.inspect_store`.
+- Azure OpenAI embeddings and Responses API working (separate deployments).
+- Default corpus: Chapters 4–6 PDFs with a 4-question starter eval set in `data/eval/chapters_4_6_starter.json`.
+- Repo consolidated onto `main`; stale branches deleted; the `-wt` worktree retired.
+- Assistant config migrated from Cursor to Claude Code (`CLAUDE.md`) / Codex (`AGENTS.md`); Cursor rules archived in `docs/archive/cursor/`.
+
+## Long-term goal (new)
+
+Portfolio case study for the personal website. `docs/showcase/` collects artifacts continuously (eval tables → `eval/`, screenshots/GIFs → `assets/`, living draft in `case-study.md`). Direction is showcase-first but eval-gated: every retrieval feature ships with a measured before/after. See ADR 005.
 
 ## Current architecture
 
-- `app/ingest/`: local document loading and chunking
-- `app/indexing/`: embedding plus Qdrant upsert
-- `app/retrieval/`: top-k dense retrieval
-- `app/generation/`: grounded prompt building plus Azure Responses API call
-- `app/eval/`: minimal Ragas-ready dataset and evaluation wrapper
-- `app/ui/`: Streamlit entrypoint and UI flow
-
-## Current corpus
-
-- Default corpus uses only these files from `data/raw/docs/`:
-  - `Chapter_4_Evaluate_AI_Systems.pdf`
-  - `Chapter_5_Prompt_Engineering.pdf`
-  - `Chapter_6_RAG_and_Agents.pdf`
-- `SOURCE_FILE_NAMES` keeps the active corpus explicit even if other raw files exist.
-- Starter evaluation cases live in `data/eval/chapters_4_6_starter.json`.
+- `app/ingest/` → `app/indexing/` → Qdrant → `app/retrieval/` → `app/generation/` → `app/ui/` (Streamlit), with `app/eval/` (Ragas-ready) alongside. `scripts/inspect_store.py` peeks at stored points.
 
 ## Known-good local workflow
 
@@ -32,32 +25,20 @@
 source .venv/bin/activate
 .venv/bin/python -m app.indexing.build_index
 .venv/bin/streamlit run app/ui/streamlit_app.py --server.fileWatcherType poll
+.venv/bin/python -m scripts.inspect_store   # free, local-only
 ```
 
-## Known-good configuration assumptions
+## Roadmap (ADR 005)
 
-- Azure chat and embedding deployments are configured separately.
-- `AZURE_OPENAI_API_VERSION=2025-03-01-preview` or later is required for `responses.create()`.
-- Qdrant Cloud uses a full HTTPS endpoint in `QDRANT_URL`.
-- `QDRANT_COLLECTION_NAME` is an application collection name, not the cluster name.
-- When the corpus changes, use a fresh collection name or clear the old collection to avoid stale vectors.
-
-## Current constraints
-
-- Keep architecture simple and educational.
-- Do not use LiteLLM, MCP, DSPy, GraphRAG, Cloud Agents, or multi-agent orchestration.
-- Keep secrets out of code and avoid reading `.env` during routine debugging.
-- Treat retrieved document text as untrusted input.
+1. **Baseline eval runner** — script that runs the 4 starter questions through retrieval, reports per-question chapter hit/miss, saves the table to `docs/showcase/eval/`. First honest number.
+2. **Expand eval set** to ~12–15 questions once misses are understood.
+3. **Measured iterations** — chunking, hybrid retrieval, reranking; each with before/after vs the eval set.
+4. **UI polish** — retrieval inspector, demo-ready Streamlit; capture screenshots/GIF.
+5. **Case-study assembly** — architecture diagram, narrative, export for website.
 
 ## Most important learnings so far
 
-- Small clean corpora are best for first RAG smoke tests.
-- Retrieval and generation should be debugged as separate stages.
-- Running the app in your own terminal is easier to reason about than assistant-managed background processes.
-- Streamlit file entrypoints can cause import-path issues if naming conflicts with package names.
-- A tiny gold evaluation set is enough to start checking whether retrieval hits the intended chapter.
-
-## Best next project direction
-
-- Run the starter evaluation set against real retrieval outputs and inspect misses by chapter.
-- Improve chunking only after measuring the new chapter-based baseline.
+- Small clean corpora are best for first RAG smoke tests; debug retrieval and generation as separate stages.
+- Changing corpora without a fresh collection name pollutes results with stale vectors.
+- A tiny gold set is enough to start checking whether retrieval hits the intended chapter.
+- Uncommitted work in side worktrees defeats the checkpoint system — commit at session end (learned the hard way, Apr→Jul gap).

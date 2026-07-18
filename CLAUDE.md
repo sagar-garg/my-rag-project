@@ -8,11 +8,23 @@ This repo's working agreement with Claude Code. My global philosophy, communicat
 
 A minimal, learning-first Retrieval-Augmented Generation skeleton. The goal is to **understand each RAG stage clearly** (loading, chunking, indexing, retrieval, grounded generation, evaluation) — not to build the most capable system. Simplicity and inspectability are features, not compromises.
 
+**Long-term goal (decided 2026-07-18, ADR 005): a portfolio case study for my personal website.** The build direction is showcase-first: retrieval-quality features (hybrid search, reranking, richer UI) are in scope, but every feature must ship with a measured before/after against the eval set — the case study's spine is measured iteration, not a feature list.
+
+## Showcase artifact habit
+
+`docs/showcase/` collects the raw material for the case study. At every milestone, deposit:
+
+- eval results (hit-rate tables, Ragas metrics) → `docs/showcase/eval/`
+- screenshots / demo GIFs of the UI → `docs/showcase/assets/`
+- diagrams and narrative fragments → `docs/showcase/`
+
+If a session produces a measurable result and no artifact lands in `docs/showcase/`, the session isn't finished. `docs/showcase/case-study.md` is the living draft that these artifacts feed.
+
 ## Stack
 
 - **Language:** Python 3.11+
 - **RAG orchestration:** LlamaIndex Core
-- **Vector store:** Qdrant Cloud
+- **Vector store:** Qdrant — local embedded store by default (`QDRANT_LOCAL_PATH=qdrant_data`, single process at a time); Qdrant Cloud optional via `QDRANT_URL`
 - **Embeddings + generation:** Azure OpenAI (separate deployments for embedding and chat; Responses API for generation, requires API version `2025-03-01-preview` or later)
 - **Evaluation:** Ragas
 - **UI:** Streamlit (local)
@@ -81,6 +93,8 @@ user question → retrieval.search → Qdrant → generation.respond → Azure R
 - Heavy observability/gateway layers
 
 The project intentionally stays small. If a problem seems to need one of these, first ask whether a simpler approach gets us 80% there.
+
+Note: hybrid retrieval, reranking, and richer UI are **no longer** on this list (ADR 005) — they are roadmap items, gated on eval evidence showing where dense retrieval falls short.
 
 ## Workflow pointers
 
