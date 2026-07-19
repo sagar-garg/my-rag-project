@@ -23,6 +23,8 @@ Stack: Python, LlamaIndex Core, Qdrant (local embedded), Azure OpenAI (separate 
 | Chunking sweep (256/512/1024) | 2026-07-19 | purity 92% / 92% / 90%, mean rank 1.13 / 1.07 / 1.00 | first measured feature iteration — and a deliberate null result: chunk size redistributes the Ch5/Ch6 confusion between rank and purity but never removes it; 512/80 kept, fix deferred to hybrid/reranking ([details](eval/2026-07-19-chunking-comparison.md)) |
 | Hybrid retrieval (dense + BM25, RRF) | 2026-07-19 | purity 92% (dense) vs 87% (hybrid) vs 72% (BM25-only) | second negative result, hybrid rejected on evidence: the lexical side is strictly weaker on a paraphrase-heavy eval set and fails the Ch5/Ch6 trap identically to dense, so equal-weight fusion pollutes four clean questions to gain one chunk; dense stays, and two nulls now triangulate the fix to reranking ([details](eval/2026-07-19-hybrid-comparison.md)) |
 | LLM listwise reranking (gpt-4o, dense top-12 → top-4) | 2026-07-19 | purity 92% (dense) vs 93% / 92% (rerank ×2 runs) | split decision: the first change to move the Q8 acid test (rank 2 → 1, stable across both runs) and a full Q3 fix, but a stable Q5 regression cancels the gains — the wider candidate pool that lets a reranker fix one question exposes off-target text on another; dense stays the default, and the residual ~8% impurity is reclassified as genuine cross-chapter content overlap, closing retrieval-side iteration ([details](eval/2026-07-19-rerank-comparison.md)) |
+| Rerank coda: judge swapped to gpt-5-mini | 2026-07-19 | purity 92% ×2 runs, mean first-hit rank **1.00** ×2 | the judge model turns out to be a hyperparameter: gpt-5-mini puts every question at rank 1 in both runs (no Q5-style rank regression) at ~¼ gpt-4o's cost — but purity stays a 55/60 wash, so the split decision narrows without flipping; dense remains the default ([details](eval/2026-07-19-rerank-gpt5mini-coda.md)) |
+| Retrieval inspector UI + mode toggle | 2026-07-19 | — | the measured comparison becomes demo-able: Streamlit inspector shows per-chunk chapter/score/on-target highlighting against the eval set, with a dense/hybrid/rerank toggle — the Q8 trap and its rerank fix, live ([dense](assets/2026-07-19-inspector-q8-dense.png) · [rerank](assets/2026-07-19-inspector-q8-rerank.png) · [GIF](assets/2026-07-19-mode-toggle.gif)) |
 
 ## Interesting failures and fixes
 
@@ -77,6 +79,16 @@ _Populating from eval near-misses; this section is where the story lives._
   ~8% impurity looks like genuine cross-chapter content overlap, not a
   retriever defect: retrieval-side iteration on this corpus closed here.
   (2026-07-19)
+- **The judge model is a hyperparameter, and n=1 smoke tests mislead.**
+  Rerouting the rerank call from gpt-4o to gpt-5-mini after a single perfect
+  Q8 smoke test (4/4 rank 1), the full two-run coda told a subtler story:
+  the perfect purity didn't replicate (2–3/4, same band as gpt-4o), but
+  something better appeared — *every* question reached first-hit rank 1 in
+  both runs, with none of gpt-4o's rank regressions, at ~¼ the cost. Rank
+  joined hit@4 as a saturated metric; purity stayed a 55/60 wash, so the
+  default didn't change. Two lessons: repeat runs are what separate a real
+  effect from sampling luck, and a saturated metric stops discriminating —
+  each new component can retire a metric from the eval. (2026-07-19)
 
 ## Key engineering decisions
 

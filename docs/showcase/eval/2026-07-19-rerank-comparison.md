@@ -84,3 +84,12 @@ answer use the retrieved context faithfully — Ragas) or presentation-side
 Two rerank runs: 165,880 input + 1,114 output tokens on `gpt-4o`
 (~$0.21/run, **~$0.43 total** — the first non-trivial spend in the ledger);
 dense control and candidate-pool inspection ≈ $0.0001. See `docs/costs.md`.
+
+## Coda (2026-07-19, later the same day)
+
+Rerun with `gpt-5-mini` as the judge after judge-call routing landed: purity
+still a wash (55/60 both runs), **but all 15 questions reached first-hit
+rank 1 in both runs** — the rank metric saturates, with no Q5-style rank
+regression — at ~¼ the cost. Dense stays the default (purity is the binding
+metric and didn't move), but gpt-5-mini strictly dominates gpt-4o as the
+rerank judge. Full analysis: [gpt-5-mini coda](2026-07-19-rerank-gpt5mini-coda.md).

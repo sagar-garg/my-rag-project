@@ -31,6 +31,7 @@ from app.retrieval.search import (
     search_chunks,
     search_chunks_hybrid,
 )
+from app.ui.inspector import chapter_label
 
 STARTER_EVAL_PATH = PROJECT_ROOT / "data" / "eval" / "chapters_4_6_starter.json"
 DEFAULT_OUTPUT_PATH = (
@@ -42,15 +43,6 @@ def _shorten(text: str, max_length: int = 48) -> str:
     return text if len(text) <= max_length else text[: max_length - 1] + "…"
 
 
-def _chapter_label(file_name: str) -> str:
-    """Compress `Chapter_6_RAG_and_Agents.pdf` to `Ch6` for compact tables."""
-
-    parts = file_name.split("_")
-    if len(parts) >= 2 and parts[0] == "Chapter":
-        return f"Ch{parts[1]}"
-    return file_name
-
-
 def print_report(judgments: list[RetrievalJudgment], top_k: int) -> None:
     print(f"\nStarter eval — retrieval only, hit@{top_k}\n")
     header = f"{'Question':<50} {'Expected':<10} {'Result':<7} {'Rank':<5} On-target"
@@ -58,7 +50,7 @@ def print_report(judgments: list[RetrievalJudgment], top_k: int) -> None:
     print("-" * len(header))
     for judgment in judgments:
         expected = ", ".join(
-            _chapter_label(name) for name in judgment.case.target_sources
+            chapter_label(name) for name in judgment.case.target_sources
         )
         result = "HIT" if judgment.hit else "MISS"
         rank = str(judgment.first_hit_rank) if judgment.first_hit_rank else "—"
@@ -140,12 +132,12 @@ def render_markdown(
     ]
     for index, judgment in enumerate(judgments, start=1):
         expected = ", ".join(
-            _chapter_label(name) for name in judgment.case.target_sources
+            chapter_label(name) for name in judgment.case.target_sources
         )
         result = "✅ hit" if judgment.hit else "❌ miss"
         rank = str(judgment.first_hit_rank) if judgment.first_hit_rank else "—"
         retrieved = ", ".join(
-            _chapter_label(name) for name in judgment.retrieved_file_names
+            chapter_label(name) for name in judgment.retrieved_file_names
         )
         lines.append(
             f"| {index} | {judgment.case.question} | {expected} | {result} "

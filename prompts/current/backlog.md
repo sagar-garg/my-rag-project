@@ -10,22 +10,25 @@
 - ~~Add aggregate purity + mean first-hit rank to the runner's summary output~~ — done 2026-07-19 (`summarize_judgments`, Summary block in artifacts).
 - ~~Hybrid retrieval (dense + lexical) with before/after numbers~~ — done 2026-07-19: negative result, rejected; BM25 side strictly weaker (72% purity) and fails Q8 identically to dense (`docs/showcase/eval/2026-07-19-hybrid-comparison.md`). Code stays opt-in (`--mode hybrid`) as documented control.
 - ~~Reranking~~ — done 2026-07-19: split decision, stays opt-in (`--mode rerank`); Q8 rank fixed (stable) but Q5 stably regressed, aggregate a wash (`docs/showcase/eval/2026-07-19-rerank-comparison.md`). **Retrieval-side iteration closed** — residual impurity is content ambiguity, not a retriever defect.
-- **Streamlit retrieval inspector — now the next step** (roadmap item 4): scores, chunk boundaries, expected-vs-actual sources for eval questions; optional dense/hybrid/rerank mode toggle; capture screenshots/GIF for `docs/showcase/assets/`. See `prompts/current/next-chat.md`.
+- ~~Streamlit retrieval inspector~~ — done 2026-07-19: inspector + dense/hybrid/rerank toggle shipped; screenshots + demo GIF in `docs/showcase/assets/`; embedded-Qdrant lock race fixed via `st.cache_resource` shared client. Roadmap item 4 closed.
+- ~~gpt-5-mini rerank coda~~ — done 2026-07-19: rank saturates (1.00 both runs, no regressions) at ~¼ cost, purity wash → dense stays default; gpt-5-mini strictly dominates gpt-4o as judge (`docs/showcase/eval/2026-07-19-rerank-gpt5mini-coda.md`).
+- **Case-study assembly — now the next step** (roadmap item 5, the last): diagram, narrative, export. See `prompts/current/next-chat.md`.
 
 ## Medium-term (showcase-first, eval-gated — ADR 005)
-- Answer-quality metrics via Ragas (faithfulness, answer relevancy) — retrieval is now stable/closed. Cost caveat: the chat deployment is full-size `gpt-4o` (~$2.50/1M input); estimate per-metric cost first, consider a mini deployment for judge calls.
+- Answer-quality metrics via Ragas (faithfulness, answer relevancy) — retrieval is now stable/closed. Judge calls can route to the cheap `gpt-5-mini` deployment (`AZURE_OPENAI_JUDGE_DEPLOYMENT`, live since 2026-07-19); **gate on migrating `AZURE_OPENAI_CHAT_DEPLOYMENT` to gpt-5.1 first** so the metric series isn't broken by the 2026-10-01 gpt-4o retirement.
 
 ## Showcase pipeline (continuous)
 
 - Deposit an artifact in `docs/showcase/` at every milestone (see CLAUDE.md habit).
 - Architecture diagram exportable for the website.
-- Demo GIF of the UI once the retrieval inspector lands.
+- ~~Demo GIF of the UI once the retrieval inspector lands~~ — done 2026-07-19 (`assets/2026-07-19-mode-toggle.gif`).
 - Case-study draft grows with each measured iteration.
 
 ## Later ideas
 
 - Document quality checklist before indexing new corpora.
-- Section-level or chunk-level gold labels — only if purity/rank stop discriminating; would let hit@k actually fail on this corpus.
+- Section-level or chunk-level gold labels — only if purity stops discriminating (rank and hit@4 already saturated); would let hit@k actually fail on this corpus.
+- Rerank latency/cost knob: `reasoning={"effort": "low"}` on the gpt-5-mini judge call (~1k reasoning tokens/call is the cost driver) — untested, only worth it if rerank mode gets real interactive use.
 
 ## Still out of scope unless clearly needed
 

@@ -33,8 +33,9 @@ the Azure portal (Cost Management) if precision ever matters.
 | 2026-07-19 | Hybrid iteration: 2 eval runs (30 query embeds ≈ 1k tokens); BM25 + RRF local, no index build | ~$0.00002 | $0.008 |
 | 2026-07-19 | Rerank iteration: 2 LLM rerank runs on `gpt-4o` (165,880 in + 1,114 out tokens, actuals from API usage) + dense control + 2 diagnostic embeds | ~$0.43 | $0.44 |
 | 2026-07-19 | Judge routing smoke test: 1 rerank call on `gpt-5-mini` (5,549 in + 993 out, ~960 of them reasoning tokens) | ~$0.003 | $0.44 |
+| 2026-07-19 | Rerank coda: 2 LLM rerank runs on `gpt-5-mini` (165,850 in + 29,414 out tokens, actuals from API usage; output is ~50% reasoning tokens) + 30 query embeds | ~$0.10 | $0.54 |
 
-**Total to date: ~$0.44**, almost all of it the 2026-07-19 rerank iteration —
+**Total to date: ~$0.54**, almost all of it the 2026-07-19 rerank iteration —
 the chat deployment turned out to be full-size `gpt-4o` (~$2.50/1M input), not
 a mini tier, so each 15-question rerank run costs ~$0.21. Retrieval-only
 (dense/hybrid) evals remain effectively free. Manual Streamlit chat queries
