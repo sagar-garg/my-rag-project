@@ -2,6 +2,8 @@
 
 ## Near-term priorities
 
+- **Azure model migration before 2026-10-01**: the `gpt-4o` chat deployment is deprecated (retires 2026-10-01, replacement gpt-5.1); gpt-4o-mini/gpt-4.1-mini retire the same month. Create a judge deployment on a GA mini (gpt-5-mini or gpt-5.4-mini) → `AZURE_OPENAI_JUDGE_DEPLOYMENT`, and migrate `AZURE_OPENAI_CHAT_DEPLOYMENT` to gpt-5.1 *before* any Ragas generation baselines are measured (a model swap mid-series breaks comparability). Source: Microsoft model-retirement schedule, checked 2026-07-19.
+
 - ~~Build the baseline eval runner~~ — done 2026-07-18: 4/4 hit@4, saturated (`docs/showcase/eval/2026-07-18-baseline.md`).
 - ~~Expand the eval set to ~12–15 harder questions~~ — done 2026-07-18: 15 questions (`docs/showcase/eval/2026-07-18-expanded-set.md`). Hit@4 is structurally saturated at chapter level; **purity (55/60) and first-hit rank (worst: 2) are now the gating metrics** for all feature work.
 - ~~First measured iteration: chunking parameters~~ — done 2026-07-19: null result, 512/80 stays; chunk size redistributes the Ch5/Ch6 confusion, doesn't remove it (`docs/showcase/eval/2026-07-19-chunking-comparison.md`).
