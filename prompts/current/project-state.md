@@ -1,10 +1,11 @@
 # Project State
 
-_Last updated: 2026-07-19 evening (gpt-5-mini rerank coda measured — rank saturates, dense still default; retrieval inspector UI + mode toggle shipped, showcase assets captured; next: case-study assembly)_
+_Last updated: 2026-07-19 late evening (case study assembled — ADR 005 roadmap complete; export decision: markdown as-is; next: Azure model migration, the Ragas gate)_
 
 ## Current status
 
 - Minimal learning-first RAG app works end to end.
+- **Case study assembled (2026-07-19) — ADR 005 roadmap item 5 done, roadmap complete.** `docs/showcase/case-study.md` is now a full draft: tightened pitch (three honest negatives bound the residual error as content ambiguity), new "The arc" narrative section with the Q8 dense/rerank screenshots embedded, finalized engineering-decisions section, and seven distilled "Learnings worth publishing". Architecture diagram: mermaid source `docs/showcase/architecture.mmd` (neutral theme, edge-order tuned so the pipeline stays on one rank) + SVG export `docs/showcase/assets/2026-07-19-architecture.svg`. All relative links verified; 42 tests green, zero code changes. **Export decision (Sagar, 2026-07-19): markdown as-is** — `docs/showcase/` is the canonical artifact; adaptation happens in the website repo, no export tooling here.
 - **Rerank coda done (2026-07-19, later same day) — gpt-5-mini judge, two runs, verdict narrows but stands.** The smoke test's perfect Q8 did *not* replicate (2–3/4 purity), aggregate purity a 55/60 wash both runs — but **all 15 questions hit first-hit rank 1 in both runs** (dense worst: 2; gpt-4o rerank worst: 2), no rank regressions, at ~$0.05/run (~¼ of gpt-4o). Pre-registered flip criteria (Q5 recovered, aggregate > dense) not met → dense stays the default, no ADR; gpt-5-mini strictly dominates gpt-4o as rerank judge. Full analysis: `docs/showcase/eval/2026-07-19-rerank-gpt5mini-coda.md`. Untested knob: `reasoning={"effort": "low"}` in `rerank_chunks` (~1k reasoning tokens/call is the cost driver).
 - **Retrieval inspector UI + mode toggle shipped (2026-07-19) — ADR 005 roadmap item 4 done.** Streamlit now has a sidebar retrieval-mode radio (dense default / hybrid / rerank with cost caption) and a per-query inspector: chunk rank, chapter label, chunk index, score (with per-mode score caption — `RetrievedChunk.score` is cosine for dense, RRF for hybrid, dense-passthrough for rerank), eval-question matching with expected-vs-actual ✅/❌ highlighting and a hit/rank/purity banner (`judge_retrieval` reused). Pure helpers in `app/ui/inspector.py` (`chapter_label` — moved from the eval script, `find_matching_case`, `score_caption`), tested in `tests/test_inspector.py`. **42 tests green.**
 - **Embedded-Qdrant lock race found and fixed while driving the app:** Streamlit reruns can briefly overlap (cooperative cancellation), so per-rerun `QdrantClient` creation races for the store's flock → `RuntimeError: Storage folder … already accessed`. Fix: one process-wide client via `@st.cache_resource get_qdrant_client()`; the rebuild-index button closes + clears it first because `build_index` opens its own client. Also: `$` in `st.caption` strings triggers LaTeX math rendering — escape as `\\$`.
@@ -48,7 +49,7 @@ source .venv/bin/activate
 2. ~~**Expand eval set**~~ — done 2026-07-18: 15 questions; hit@4 still 100% (structurally so), gating metrics now purity 55/60 and first-hit rank (worst 2).
 3. ~~**Measured iterations**~~ — **complete 2026-07-19**: ~~chunking~~ (null), ~~hybrid~~ (rejected), ~~reranking~~ (split decision, opt-in). Three mechanisms — geometry, lexical, reader — bound the residual impurity as content ambiguity; retrieval-side work on this corpus is closed.
 4. ~~**UI polish**~~ — done 2026-07-19: retrieval inspector + dense/hybrid/rerank toggle in Streamlit; screenshots + demo GIF in `docs/showcase/assets/`.
-5. **Case-study assembly — now the priority** — architecture diagram, narrative, export for website.
+5. ~~**Case-study assembly**~~ — done 2026-07-19: diagram, narrative, learnings; export = markdown as-is (Sagar's call). **Roadmap complete.** Next frontier: Azure model migration → Ragas generation metrics (see backlog).
 
 ## Most important learnings so far
 

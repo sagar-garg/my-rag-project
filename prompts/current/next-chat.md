@@ -3,23 +3,22 @@
 Read `CLAUDE.md`, then:
 
 - `prompts/current/project-state.md`
-- `docs/showcase/case-study.md` (the living draft — this session's raw material)
-- `docs/showcase/README.md` (artifact log: 14 eval artifacts + 4 UI assets, all dated)
+- `prompts/current/backlog.md`
+- `docs/costs.md` (cost ledger — pricing entries will need updating)
 
-Now start **case-study assembly — roadmap item 5 of ADR 005**, the final item. Everything upstream is done: three measured retrieval iterations (null, negative, split) plus the gpt-5-mini coda, and a demo-ready UI with screenshots/GIF in `docs/showcase/assets/`. This session turns raw material into the publishable write-up.
+**The ADR 005 roadmap is complete** (case study assembled 2026-07-19; export decision: markdown as-is — website adaptation happens in the website repo, not here). The next project step is the **Azure model migration**, which gates the Ragas generation metrics: `AZURE_OPENAI_CHAT_DEPLOYMENT` is `gpt-4o`, deprecated on Azure and retiring 2026-10-01; a mid-series model swap would break metric comparability, so migrate first, measure after.
 
 Goals:
 
-- **Architecture diagram**: mermaid source in the repo, exported SVG in `docs/showcase/assets/` (base it on the flowchart in `CLAUDE.md`/`README.md`; keep it stage-labeled: ingest → chunk → index → retrieve → generate, with eval alongside).
-- **Fill the case-study TODOs**: "Learnings worth publishing" (distill from `docs/checkpoints/` and project-state's learnings list — pick the ~6 with general applicability, e.g. "a metric that can't fail measures nothing", "negative results compound", "the judge model is a hyperparameter") and tighten "The pitch".
-- **Narrative pass**: the spine is measured iteration — baseline saturation → metric redesign → three mechanisms → content-ambiguity ceiling → the visible UI. Embed the assets (Q8 dense vs rerank screenshots are the money shots).
-- **Export decision** (ask Sagar): target format for the personal website — plain markdown page, or something richer. Don't build site tooling unprompted.
+- Switch the chat deployment to `gpt-5.1`: create the deployment on the existing Azure resource (Sagar may need to do the portal step — ask him to run it if CLI access is missing) and update `AZURE_OPENAI_CHAT_DEPLOYMENT`. The judge deployment stays `gpt-5-mini`.
+- Confirm nothing regresses: pytest green (42), one real grounded answer generated through `generation.respond` or the Streamlit app, and a dense eval control run (retrieval is embedding-side, so expect byte-identical results: purity 55/60, mean rank 1.07, worst 2 — any deviation is a red flag, not noise).
+- Update `docs/costs.md` with gpt-5.1 pricing; note any Responses API surprises (the Responses API needs `2025-03-01-preview` or later — verify the new model doesn't need a newer version).
+- If the migration completes cleanly with time left: start the **first Ragas generation baseline** (faithfulness, answer relevancy) on the 15-question set, judge calls routed to `gpt-5-mini` — this opens the post-migration metric series and is the natural next measured iteration.
 
 Requirements:
 
-- This is a writing/diagram session — no retrieval or UI logic changes; pytest stays green (42 tests) untouched.
-- Verification: the deliverable is reviewable prose + a rendered diagram; show the diagram rendered (screenshot or SVG) rather than asserting it renders.
-- Deposit anything new in `docs/showcase/` per the artifact habit.
+- Verification stated up front (drill): the checks are pytest output, the dense-control eval artifact matching the known baseline, and a shown generated answer — evidence, not assertion.
+- Any eval run deposits its artifact in `docs/showcase/eval/` per the artifact habit.
 - End with /handoff.
 
-Parked (explicitly not this session unless Sagar redirects): Ragas generation-side metrics — **gated on the Azure migration** (chat deployment `gpt-4o` retires 2026-10-01; migrate to gpt-5.1 first so the metric series stays comparable — see backlog).
+Parked: website integration of the case study (belongs to the website repo); rerank `reasoning={"effort": "low"}` knob (only if rerank mode gets interactive use).

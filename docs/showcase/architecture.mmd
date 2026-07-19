@@ -1,0 +1,27 @@
+%% Architecture diagram for the case study.
+%% Export: npx -y @mermaid-js/mermaid-cli -i docs/showcase/architecture.mmd \
+%%   -o docs/showcase/assets/2026-07-19-architecture.svg -b transparent
+%%{init: {"theme": "neutral"}}%%
+flowchart LR
+    subgraph ING["1 · Ingest"]
+        docs["3 chapter PDFs<br/><i>data/raw/docs</i>"]
+        loaders["ingest.loaders"]
+    end
+    subgraph CHK["2 · Chunk"]
+        chunking["ingest.chunking<br/>512 tokens / 80 overlap"]
+    end
+    subgraph IDX["3 · Index"]
+        build["indexing.build_index<br/>Azure OpenAI embeddings"]
+        qdrant[("Qdrant<br/>local embedded")]
+    end
+    subgraph RET["4 · Retrieve"]
+        search["retrieval.search<br/>dense top-4 (default)"]
+    end
+    subgraph GEN["5 · Generate"]
+        respond["generation.respond<br/>Azure Responses API"]
+    end
+
+    docs --> loaders --> chunking --> build --> qdrant --> search --> respond --> ui["Streamlit UI<br/>+ retrieval inspector"]
+    question(["User question"]) --> search
+    search -.-> opts["opt-in modes:<br/>hybrid (BM25 + RRF)<br/>LLM rerank (top-12 → 4)"]
+    search --> eval["Evaluation (gates every feature)<br/>15-question gold set<br/>purity · first-hit rank"]

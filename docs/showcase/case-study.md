@@ -1,16 +1,36 @@
 # Case study: building and measuring a RAG system from first principles
 
-> Living draft. Sections fill in as milestones land; artifacts referenced from `eval/` and `assets/`.
+> Assembled 2026-07-19 from the artifacts in `eval/` and `assets/`; export format for the website TBD.
 
-## The pitch (draft)
+## The pitch
 
-A RAG system built stage by stage — loading, chunking, indexing, retrieval, grounded generation — where every quality improvement was driven by a hand-built evaluation set, not vibes. Corpus: three chapters of Chip Huyen's *AI Engineering* (evaluation, prompt engineering, RAG & agents) — small enough to inspect by hand, real enough to expose retrieval failures.
+A minimal RAG system built stage by stage — loading, chunking, indexing, retrieval, grounded generation — and then improved by measurement instead of feature accretion. A hand-built 15-question eval set gated every retrieval feature: a chunking sweep (null result), hybrid BM25 retrieval (rejected on evidence), and LLM reranking (split decision). None of the three displaced the dense baseline, and that is the point: three cheap, honest negatives bounded the system's residual error as content ambiguity rather than a retriever defect — for about a dollar of API spend. Corpus: three chapters of Chip Huyen's *AI Engineering* (evaluation, prompt engineering, RAG & agents) — small enough to inspect by hand, real enough to expose retrieval failures.
 
 ## Architecture
 
-_TODO: exportable diagram (mermaid → SVG for the website). Base on the flowchart in README.md._
+![Architecture: ingest → chunk → index → retrieve → generate, with evaluation gating every feature](assets/2026-07-19-architecture.svg)
+
+_Mermaid source: [`architecture.mmd`](architecture.mmd)._
 
 Stack: Python, LlamaIndex Core, Qdrant (local embedded), Azure OpenAI (separate embedding + chat deployments, Responses API), Ragas, Streamlit.
+
+## The arc
+
+The spine of the project is one loop, run honestly, five times: measure, change one thing, re-measure, keep or revert.
+
+1. **The baseline saturates on day one.** The 4-question starter set scored 100% hit@4, every first hit at rank 1. A perfect score on the first measurement is a broken instrument, not a solved problem — the eval set had to get harder before any feature could show a gain.
+2. **Redesign the instrument, not the system.** The set grew to 15 adversarial questions: no chapter names, paraphrased concepts, deliberate Ch5/Ch6 vocabulary traps. Hit@4 *stayed* at 100% — with 3 source files and 4 retrieved chunks it is structurally unmissable — so the gating metrics became the finer ones already being collected: chunk purity (55/60) and first-hit rank (worst: 2, on the designed trap Q8).
+3. **Three mechanisms, three honest verdicts.** A chunking sweep (256/512/1024) returned a null: geometry redistributes the cross-chapter confusion, never removes it. Hybrid dense+BM25 was rejected: the lexical side is strictly weaker on paraphrased questions and fails the Q8 trap identically, so fusion pollutes four clean questions to gain one chunk. LLM listwise reranking split: the first change to fix Q8's rank — stable across repeat runs — but it stably broke a question dense had perfect, netting zero. Dense top-4 stayed the default through all three.
+4. **The ceiling is the content, not the retriever.** When geometry, lexical signal, and a candidate-reading reranker all leave the same ~8% impurity, the residual is cross-chapter content overlap — chapters that genuinely discuss the same material. Retrieval-side iteration closed there, deliberately, with the boundary measured rather than assumed.
+5. **Make the measurement visible.** A Streamlit retrieval inspector shows, per chunk, the chapter, score, and expected-vs-actual judgment against the eval set, with a dense/hybrid/rerank toggle. The eval table's worst row is now a live demo — Q8 in dense mode retrieves an off-target Chapter 6 chunk at rank 1:
+
+   ![Q8 in dense mode: rank-1 chunk flagged off-target, hit at rank 2, purity 2/4](assets/2026-07-19-inspector-q8-dense.png)
+
+   Toggle to rerank mode and the needle-in-a-haystack Chapter 5 passage is promoted to rank 1:
+
+   ![Q8 in rerank mode: the on-target chunk promoted to rank 1](assets/2026-07-19-inspector-q8-rerank.png)
+
+   The full toggle sequence as a GIF: [mode-toggle demo](assets/2026-07-19-mode-toggle.gif).
 
 ## Timeline of measured iterations
 
@@ -28,7 +48,7 @@ Stack: Python, LlamaIndex Core, Qdrant (local embedded), Azure OpenAI (separate 
 
 ## Interesting failures and fixes
 
-_Populating from eval near-misses; this section is where the story lives._
+Each entry is a measured near-miss and what it taught; dates link back to the artifact log.
 
 - **A metric that can't fail measures nothing.** Hit@4 at chapter granularity on
   a 3-file corpus is structurally unmissable — all four retrieved chunks would
@@ -92,13 +112,22 @@ _Populating from eval near-misses; this section is where the story lives._
 
 ## Key engineering decisions
 
-Source: `docs/decisions/` (ADRs 001–005). Candidates for the write-up:
+Source: `docs/decisions/` (ADRs 001–005).
 
-- explicit corpus selection + fresh collection names to avoid stale-vector pollution
-- separating retrieval debugging from generation debugging
-- local embedded vector store over cloud for a single-user learning system
-- eval-gated feature additions (ADR 005)
+- **Eval-gated feature additions** (ADR 005) — no retrieval feature merges as a default without a measured before/after on the gold set. This single rule produced the whole arc above.
+- **Explicit corpus selection + fresh collection names per corpus** — stale vectors from a previous corpus silently pollute results; a new collection name per corpus change makes contamination structurally impossible.
+- **Retrieval and generation debugged as separate stages** — a wrong answer has two very different failure modes; the eval set judges retrieval alone so generation quality can't mask retrieval defects (or vice versa).
+- **Local embedded vector store over cloud** — for a single-user learning system, an embedded Qdrant store removes a network dependency, a credential, and a bill; its one real cost (single-client lock) was found and handled.
+- **Opt-in, not deleted** — rejected features (hybrid, rerank) stay in the code behind `--mode` flags as documented controls, so every comparison in this write-up remains reproducible.
 
 ## Learnings worth publishing
 
-_TODO: distill from `docs/checkpoints/` "Important lessons" sections at assembly time._
+Distilled from the checkpoint log — the ones that generalize beyond this repo.
+
+1. **A metric that can't fail measures nothing.** Chapter-level hit@4 on a 3-file corpus is structurally unmissable, so 100% is silence, not success. When a binary metric saturates, move to the finer signals already being collected (purity, first-hit rank) before celebrating or redesigning.
+2. **For embeddings, hardness is shared vocabulary, not oblique wording.** The question with *zero* lexical overlap with its target retrieved perfectly; the questions reusing vocabulary two chapters share are the ones that degraded. Adversarial eval questions come from cross-document lexical confusion, not paraphrase distance.
+3. **Negative results compound.** The chunking null ruled out geometry; the hybrid rejection ruled out lexical signal. Two cheap nulls narrowed the fix space to rerankers with more confidence than a single lucky win would have — and made the eventual "content ceiling" verdict credible.
+4. **Measure a new component alone before composing it.** The free BM25-only diagnostic (72% purity) explained the hybrid regression instantly and proved no fusion weighting could win. Fusion only helps where retrievers disagree and the added one is right often enough.
+5. **A nondeterministic component demands repeat runs.** One 15-question run can't tell a +1 purity win from sampling luck: repeat runs separated the stable effects (Q3 gain, Q8 rank fix, Q5 regression) from ±1-chunk jitter — and the n=1 smoke test's perfect score didn't replicate.
+6. **The judge model is a hyperparameter.** The same rerank prompt moved from gpt-4o to gpt-5-mini saturated first-hit rank (1.00, both runs, no regressions) at a quarter of the cost. Model choice inside a component deserves the same measured treatment as the component itself.
+7. **Know when a metric hits its content ceiling.** When three different mechanisms — geometry, lexical signal, a reading reranker — leave the same residual error, stop blaming the component and re-examine the labels: the surviving ~8% impurity is chapters genuinely covering overlapping material. Declaring an iteration line closed, on evidence, is a finding.
