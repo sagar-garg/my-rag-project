@@ -60,7 +60,7 @@ def generate_answer(
     )
 
     return GeneratedAnswer(
-        answer_text=_extract_output_text(response),
+        answer_text=extract_output_text(response),
         cited_chunks=chunks,
     )
 
@@ -93,7 +93,7 @@ def format_context_blocks(chunks: list[RetrievedChunk]) -> str:
     return "\n\n".join(blocks)
 
 
-def _extract_output_text(response: Any) -> str:
+def extract_output_text(response: Any) -> str:
     output_text = getattr(response, "output_text", "")
     if isinstance(output_text, str) and output_text.strip():
         return output_text.strip()

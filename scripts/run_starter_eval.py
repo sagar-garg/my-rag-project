@@ -16,7 +16,7 @@ import argparse
 from datetime import date
 from pathlib import Path
 
-from app.clients import build_qdrant_client
+from app.clients import build_azure_openai_client, build_qdrant_client
 from app.config import PROJECT_ROOT, AppConfig
 from app.eval.basic_eval import (
     RetrievalJudgment,
@@ -25,6 +25,7 @@ from app.eval.basic_eval import (
     summarize_judgments,
 )
 from app.retrieval.lexical import Bm25Index, load_corpus
+from app.retrieval.rerank import search_chunks_reranked
 from app.retrieval.search import (
     CANDIDATE_MULTIPLIER,
     search_chunks,
@@ -86,6 +87,11 @@ def _retrieval_description(mode: str, config: AppConfig) -> str:
         return (
             f"hybrid (dense + BM25, RRF k=60, "
             f"{config.top_k * CANDIDATE_MULTIPLIER} candidates/side) top-{config.top_k}"
+        )
+    if mode == "rerank":
+        return (
+            f"LLM rerank ({config.chat_deployment_name}) of dense "
+            f"top-{config.top_k * CANDIDATE_MULTIPLIER} → top-{config.top_k}"
         )
     return f"dense top-{config.top_k}"
 
@@ -172,9 +178,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["dense", "hybrid"],
+        choices=["dense", "hybrid", "rerank"],
         default="dense",
-        help="Retrieval path: dense (default) or hybrid (dense + BM25 via RRF)",
+        help=(
+            "Retrieval path: dense (default), hybrid (dense + BM25 via RRF), "
+            "or rerank (LLM listwise rerank of dense candidates)"
+        ),
     )
     args = parser.parse_args()
 
@@ -192,10 +201,26 @@ def main() -> None:
         bm25_index = Bm25Index(corpus)
         print(f"BM25 index built over {len(corpus)} chunks (local, no API).")
 
+    azure_client = None
+    if args.mode == "rerank":
+        azure_client = build_azure_openai_client(config)
+
     cases = load_starter_eval_cases(STARTER_EVAL_PATH)
     judgments = []
+    total_input_tokens = 0
+    total_output_tokens = 0
     for case in cases:
-        if bm25_index is not None:
+        if args.mode == "rerank":
+            rerank_result = search_chunks_reranked(
+                case.question,
+                config=config,
+                client=qdrant_client,
+                azure_client=azure_client,
+            )
+            chunks = rerank_result.chunks
+            total_input_tokens += rerank_result.input_tokens
+            total_output_tokens += rerank_result.output_tokens
+        elif bm25_index is not None:
             chunks = search_chunks_hybrid(
                 case.question,
                 config=config,
@@ -209,6 +234,12 @@ def main() -> None:
         )
 
     print_report(judgments, config.top_k)
+
+    if args.mode == "rerank":
+        print(
+            f"\nRerank chat usage: {total_input_tokens} input + "
+            f"{total_output_tokens} output tokens across {len(cases)} calls"
+        )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
