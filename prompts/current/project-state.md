@@ -16,7 +16,7 @@ _Last updated: 2026-07-19 (reranking measured twice — split decision, dense st
 - Earlier baseline (4 questions, saturated): `docs/showcase/eval/2026-07-18-baseline.md`.
 - `search_chunks` accepts an optional shared Qdrant `client` (needed because the embedded store allows only one client instance even within a single process).
 - Vector store is now a **local embedded Qdrant** (`QDRANT_LOCAL_PATH=qdrant_data`); the cloud cluster was deleted. Single-process caveat: stop Streamlit before running `build_index` or `scripts.inspect_store`.
-- Azure OpenAI embeddings and Responses API working (separate deployments).
+- Azure OpenAI embeddings and Responses API working (separate deployments). **Judge-call routing (2026-07-19):** optional `AZURE_OPENAI_JUDGE_DEPLOYMENT` (currently `gpt-5-mini`, same resource) backs rerank/eval-judge calls via `config.judge_deployment_name`, falling back to the chat deployment when unset; user-facing answers stay on `AZURE_OPENAI_CHAT_DEPLOYMENT` (`gpt-4o` — **deprecated on Azure, retires 2026-10-01**, migrate to gpt-5.1 before Ragas baselines; see backlog).
 - Default corpus: Chapters 4–6 PDFs with a 4-question starter eval set in `data/eval/chapters_4_6_starter.json`.
 - Repo consolidated onto `main`; stale branches deleted; the `-wt` worktree retired.
 - Assistant config migrated from Cursor to Claude Code (`CLAUDE.md`) / Codex (`AGENTS.md`); Cursor rules archived in `docs/archive/cursor/`.

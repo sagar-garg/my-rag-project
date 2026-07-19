@@ -32,6 +32,7 @@ the Azure portal (Cost Management) if precision ever matters.
 | 2026-07-19 | Chunking sweep: 2 index builds (386 + 85 chunks ≈ 190k tokens) + 3 eval runs (45 query embeds) | ~$0.004 | $0.008 |
 | 2026-07-19 | Hybrid iteration: 2 eval runs (30 query embeds ≈ 1k tokens); BM25 + RRF local, no index build | ~$0.00002 | $0.008 |
 | 2026-07-19 | Rerank iteration: 2 LLM rerank runs on `gpt-4o` (165,880 in + 1,114 out tokens, actuals from API usage) + dense control + 2 diagnostic embeds | ~$0.43 | $0.44 |
+| 2026-07-19 | Judge routing smoke test: 1 rerank call on `gpt-5-mini` (5,549 in + 993 out, ~960 of them reasoning tokens) | ~$0.003 | $0.44 |
 
 **Total to date: ~$0.44**, almost all of it the 2026-07-19 rerank iteration —
 the chat deployment turned out to be full-size `gpt-4o` (~$2.50/1M input), not
