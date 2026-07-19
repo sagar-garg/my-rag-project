@@ -90,7 +90,7 @@ def _retrieval_description(mode: str, config: AppConfig) -> str:
         )
     if mode == "rerank":
         return (
-            f"LLM rerank ({config.chat_deployment_name}) of dense "
+            f"LLM rerank ({config.judge_deployment_name}) of dense "
             f"top-{config.top_k * CANDIDATE_MULTIPLIER} → top-{config.top_k}"
         )
     return f"dense top-{config.top_k}"

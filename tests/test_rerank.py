@@ -8,7 +8,7 @@ from app.retrieval.rerank import (
 )
 
 
-_STUB_CONFIG = types.SimpleNamespace(chat_deployment_name="fake-chat-deployment")
+_STUB_CONFIG = types.SimpleNamespace(judge_deployment_name="fake-judge-deployment")
 
 
 def _make_chunks(count: int) -> list[RetrievedChunk]:

@@ -104,7 +104,7 @@ def rerank_chunks(
     user_prompt = build_rerank_prompt(question, candidates)
 
     response = client.responses.create(
-        model=config.chat_deployment_name,
+        model=config.judge_deployment_name,
         input=[
             {
                 "role": "system",

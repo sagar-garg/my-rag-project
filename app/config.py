@@ -25,6 +25,7 @@ class AppConfig:
     azure_openai_endpoint: str
     azure_openai_api_version: str
     chat_deployment_name: str
+    judge_deployment_name: str
     embedding_deployment_name: str
     qdrant_url: str | None
     qdrant_api_key: str | None
@@ -73,6 +74,13 @@ class AppConfig:
             azure_openai_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
             azure_openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
             chat_deployment_name=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
+            # High-volume, low-stakes calls (reranking, eval judges) route to a
+            # cheaper deployment when one is configured; user-facing answers
+            # keep using the chat deployment.
+            judge_deployment_name=(
+                os.getenv("AZURE_OPENAI_JUDGE_DEPLOYMENT")
+                or os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"]
+            ),
             embedding_deployment_name=os.environ[
                 "AZURE_OPENAI_EMBEDDING_DEPLOYMENT"
             ],
