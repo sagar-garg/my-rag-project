@@ -1,10 +1,11 @@
 # Project State
 
-_Last updated: 2026-07-19 (chunking sweep done — null result, 512/80 stays; next: hybrid retrieval)_
+_Last updated: 2026-07-19 (hybrid retrieval measured and rejected — dense stays; next: reranking)_
 
 ## Current status
 
 - Minimal learning-first RAG app works end to end.
+- **Hybrid retrieval done (2026-07-19) — second measured iteration, negative result, hybrid rejected.** Hand-rolled in-memory Okapi BM25 (`app/retrieval/lexical.py`) + reciprocal rank fusion (`app/retrieval/fusion.py`), opt-in via `search_chunks_hybrid` and `run_starter_eval --mode hybrid`; dense path untouched. Purity: dense 55/60 (92%) vs hybrid 52/60 (87%) vs BM25-only 43/60 (72%). BM25 fails the Q8 Ch5/Ch6 trap identically to dense, so no fusion weighting can rescue it. **Dense stays the default; the evidence now points to reranking.** Full analysis: `docs/showcase/eval/2026-07-19-hybrid-comparison.md`.
 - **Chunking sweep done (2026-07-19) — first measured feature iteration, deliberate null result.** 256/40, 512/80, 1024/160 against the 15-question set: chunk size redistributes the Ch5/Ch6 confusion between rank and purity but never removes it (256: purity 55/60, worst rank 3; 512: 55/60, worst 2; 1024: 54/60, all ranks 1). **512/80 stays the default**; the Q3/Q8 fix needs retrieval-side discrimination — hybrid or reranking, the next roadmap item. Full analysis: `docs/showcase/eval/2026-07-19-chunking-comparison.md`.
 - `run_starter_eval` now prints and writes an aggregate summary (purity, mean/worst first-hit rank) via `summarize_judgments()` in `app/eval/basic_eval.py` — per-run artifacts are one-glance comparable. Tested in `tests/test_basic_eval.py`.
 - The local Qdrant store now holds three collections: `book_chapters_4_6` (512/80, the default), plus sweep leftovers `book_chapters_4_6_c256o40` and `book_chapters_4_6_c1024o160` (~$0.004 to rebuild if ever deleted; harmless to keep).
@@ -40,7 +41,7 @@ source .venv/bin/activate
 
 1. ~~**Baseline eval runner**~~ — done 2026-07-18: 4/4 hit@4 (saturated — see artifact).
 2. ~~**Expand eval set**~~ — done 2026-07-18: 15 questions; hit@4 still 100% (structurally so), gating metrics now purity 55/60 and first-hit rank (worst 2).
-3. **Measured iterations — now the priority** — ~~chunking~~ (done 2026-07-19, null result), hybrid retrieval (next), reranking; each with before/after vs the eval set, judged on purity and first-hit rank (hit@4 will read 100% → 100% regardless).
+3. **Measured iterations — now the priority** — ~~chunking~~ (done 2026-07-19, null result), ~~hybrid retrieval~~ (done 2026-07-19, rejected on evidence), reranking (next); each with before/after vs the eval set, judged on purity and first-hit rank (hit@4 will read 100% → 100% regardless).
 4. **UI polish** — retrieval inspector, demo-ready Streamlit; capture screenshots/GIF.
 5. **Case-study assembly** — architecture diagram, narrative, export for website.
 
@@ -57,3 +58,6 @@ source .venv/bin/activate
 - Chunk size moves cross-chapter confusion around; it doesn't remove it. A geometry knob can't fix a discrimination problem — separating confusable chapters needs lexical signal (hybrid) or a reranker.
 - Purity fractions aren't comparable across chunk sizes: 2/4 of 512-token chunks and 1/4 of 1024-token chunks are the same on-target tokens in twice the context. Compare configs on the same chunk size, or think in on-target tokens.
 - Inline env vars beat `.env` for one-off config runs — `load_dotenv` doesn't override already-set variables, so `CHUNK_SIZE=… QDRANT_COLLECTION_NAME=… python -m …` sweeps configs without touching the file.
+- When both retrievers agree on the wrong answer, no fusion can save you: BM25 fails the Q8 vocabulary trap with the same wrong ranking as dense, because the confusable chapters share their *distinctive* terms too. Rank fusion only helps where the retrievers disagree and the added one is right often enough.
+- An eval set designed to defeat one retriever's weakness (paraphrase vs dense) also stress-tests every later feature — BM25's 72% purity on paraphrased questions was predictable in hindsight; check a new component alone (the free BM25-only diagnostic) before blaming the fusion.
+- Negative results compound: chunking ruled out geometry, hybrid ruled out lexical signal — two cheap nulls narrowed the fix to rerankers more convincingly than one win would have.
