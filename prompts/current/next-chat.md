@@ -3,23 +3,23 @@
 Read `CLAUDE.md`, then:
 
 - `prompts/current/project-state.md`
-- `docs/showcase/eval/2026-07-19-hybrid-comparison.md` (why hybrid lost and what it proves)
+- `docs/showcase/eval/2026-07-19-rerank-comparison.md` (how retrieval-side iteration closed)
+- `app/ui/streamlit_app.py` (current UI state)
 
-Now start the next measured feature iteration — **reranking**, roadmap item 3 of ADR 005 continued.
+Now start **UI polish — roadmap item 4 of ADR 005**, the first non-eval iteration.
 
-Context: two negative results triangulate here. Chunking (2026-07-19) ruled out geometry; hybrid (2026-07-19) ruled out lexical signal — BM25 fails the Q8 Ch5/Ch6 trap with the *same wrong ranking* as dense, because the confusable chapters share their distinctive vocabulary. What's left is a model that actually reads candidate text against the question. Baseline to beat (512/80, dense top-4): purity 55/60 (92%), mean first-hit rank 1.07, worst 2; weak questions Q3 (2/4), Q8 (2/4, rank 2), Q13 (3/4).
+Context: retrieval work is closed. Three measured mechanisms (chunk geometry, lexical/hybrid, LLM reranking) bounded the residual ~8% impurity as cross-chapter content ambiguity; dense top-4 stays the default, with `--mode hybrid` and `--mode rerank` in the eval runner as documented controls. The case study's spine — measured iteration with two nulls and a split decision — is complete. What's missing is the *visible* layer: a demo-ready UI and the screenshots/GIFs that `docs/showcase/assets/` is still empty of.
 
 Goals:
 
-- rerank the dense top-N candidates (N ≈ 12, reuse `CANDIDATE_MULTIPLIER` from `app/retrieval/search.py`) down to top-4; keep dense top-4 as the control, reranking opt-in (`--mode` pattern already exists in `scripts/run_starter_eval.py`)
-- **plan first — the reranker choice is the session's main decision.** Two candidates, each violating one project preference: a local cross-encoder (e.g. a small BGE/MiniLM reranker) is free per query but drags in a heavy dependency (torch/sentence-transformers) against the minimal-deps rule; an LLM reranker uses the existing Azure chat deployment (zero new deps) but adds a chat call per query and per eval question. Lay out the tradeoff with estimated eval-run cost before touching anything; the call is Sagar's.
-- run dense control + reranked eval with `--out docs/showcase/eval/2026-MM-DD-rerank-<variant>.md`; judge on purity and first-hit rank for Q3/Q8/Q13 — Q8 is the acid test (the one failure no retriever-side change has moved)
-- comparison artifact + showcase README log + case-study timeline; ADR via `/record` if reranking wins (it would settle roadmap item 3)
-- unit tests for any pure logic (prompt formatting / score parsing / candidate truncation) — no API calls in tests, per `tests/test_generation.py` pattern
+- **Retrieval inspector in Streamlit**: per query show retrieved chunks with scores, source chapter, chunk index, and expected-vs-actual highlighting when the query matches an eval question (load `data/eval/chapters_4_6_starter.json` for targets). This is backlog's top medium-term item.
+- Optional retrieval-mode toggle (dense / hybrid / rerank) in the UI sidebar — it makes the case-study demo show the measured comparison live. Note: rerank mode costs ~$0.014/query on the current full-size `gpt-4o` deployment; label it in the UI.
+- **Capture showcase assets**: screenshots of the inspector on a clean hit and on Q8 (the famous trap), ideally a short demo GIF → `docs/showcase/assets/`, logged in `docs/showcase/README.md` and referenced from `case-study.md`.
+- No retrieval-logic changes — the eval verdicts are settled; this session is presentation only.
 
 Requirements:
 
-- stop Streamlit first (embedded Qdrant single-process lock); share one Qdrant client
-- if the LLM route is chosen: estimate cost up front (15 questions × ~12 candidates), append actuals to `docs/costs.md`; retrieval-only eval must stay cheap
-- state the verification checks up front (pytest + eval Summary tables as evidence; dense control must reproduce purity 55/60, mean 1.07, worst 2 before judging the reranker)
-- end with /handoff
+- Embedded Qdrant single-process lock: the Streamlit app owns the store while running — don't run `build_index`/eval scripts concurrently.
+- Verification checks, stated up front: pytest stays green (34 tests); UI verified by driving the running app and capturing the screenshots themselves (the assets are the evidence); no new dependencies without justification.
+- Keep UI code in `app/ui/`; pure helper logic (eval-question matching, chapter labeling) goes where it's testable with at least one unit test.
+- End with /handoff.

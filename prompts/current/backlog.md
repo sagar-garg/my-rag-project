@@ -7,11 +7,11 @@
 - ~~First measured iteration: chunking parameters~~ — done 2026-07-19: null result, 512/80 stays; chunk size redistributes the Ch5/Ch6 confusion, doesn't remove it (`docs/showcase/eval/2026-07-19-chunking-comparison.md`).
 - ~~Add aggregate purity + mean first-hit rank to the runner's summary output~~ — done 2026-07-19 (`summarize_judgments`, Summary block in artifacts).
 - ~~Hybrid retrieval (dense + lexical) with before/after numbers~~ — done 2026-07-19: negative result, rejected; BM25 side strictly weaker (72% purity) and fails Q8 identically to dense (`docs/showcase/eval/2026-07-19-hybrid-comparison.md`). Code stays opt-in (`--mode hybrid`) as documented control.
-- **Reranking — now the evidence-backed next step**: chunking ruled out geometry, hybrid ruled out lexical signal; Q8 needs a model that reads candidate text. Main decision: local cross-encoder (heavy dep, free) vs LLM reranker (no dep, chat cost). See `prompts/current/next-chat.md`.
+- ~~Reranking~~ — done 2026-07-19: split decision, stays opt-in (`--mode rerank`); Q8 rank fixed (stable) but Q5 stably regressed, aggregate a wash (`docs/showcase/eval/2026-07-19-rerank-comparison.md`). **Retrieval-side iteration closed** — residual impurity is content ambiguity, not a retriever defect.
+- **Streamlit retrieval inspector — now the next step** (roadmap item 4): scores, chunk boundaries, expected-vs-actual sources for eval questions; optional dense/hybrid/rerank mode toggle; capture screenshots/GIF for `docs/showcase/assets/`. See `prompts/current/next-chat.md`.
 
 ## Medium-term (showcase-first, eval-gated — ADR 005)
-- Streamlit retrieval inspector: show scores, chunk boundaries, expected-vs-actual sources for eval questions.
-- Answer-quality metrics via Ragas (faithfulness, answer relevancy) once retrieval is stable.
+- Answer-quality metrics via Ragas (faithfulness, answer relevancy) — retrieval is now stable/closed. Cost caveat: the chat deployment is full-size `gpt-4o` (~$2.50/1M input); estimate per-metric cost first, consider a mini deployment for judge calls.
 
 ## Showcase pipeline (continuous)
 

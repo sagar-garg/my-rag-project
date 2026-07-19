@@ -1,10 +1,11 @@
 # Project State
 
-_Last updated: 2026-07-19 (hybrid retrieval measured and rejected — dense stays; next: reranking)_
+_Last updated: 2026-07-19 (reranking measured twice — split decision, dense stays; retrieval-side iteration closed; next: UI polish)_
 
 ## Current status
 
 - Minimal learning-first RAG app works end to end.
+- **LLM reranking done (2026-07-19) — third and final retrieval-side iteration, split decision, dense stays the default.** Listwise gpt-4o rerank of dense top-12 → top-4 (`app/retrieval/rerank.py`, opt-in via `--mode rerank`, zero new deps; robust ranking parse falls back to dense order). Run twice (nondeterministic): Q8's rank finally moved (2 → 1, stable — the only change of three iterations to do it) and Q3 fixed (4/4), but Q5 stably regressed (wider candidate pool exposed plausible Ch5 text); aggregate purity 55–56/60 vs dense 55/60 — a wash. **Retrieval-side iteration closed: the residual ~8% impurity is cross-chapter content overlap, not a retriever defect.** Cost surprise: the chat deployment is full-size `gpt-4o`, so the two runs cost ~$0.43 (ledger's first real spend — see `docs/costs.md`). Full analysis: `docs/showcase/eval/2026-07-19-rerank-comparison.md`.
 - **Hybrid retrieval done (2026-07-19) — second measured iteration, negative result, hybrid rejected.** Hand-rolled in-memory Okapi BM25 (`app/retrieval/lexical.py`) + reciprocal rank fusion (`app/retrieval/fusion.py`), opt-in via `search_chunks_hybrid` and `run_starter_eval --mode hybrid`; dense path untouched. Purity: dense 55/60 (92%) vs hybrid 52/60 (87%) vs BM25-only 43/60 (72%). BM25 fails the Q8 Ch5/Ch6 trap identically to dense, so no fusion weighting can rescue it. **Dense stays the default; the evidence now points to reranking.** Full analysis: `docs/showcase/eval/2026-07-19-hybrid-comparison.md`.
 - **Chunking sweep done (2026-07-19) — first measured feature iteration, deliberate null result.** 256/40, 512/80, 1024/160 against the 15-question set: chunk size redistributes the Ch5/Ch6 confusion between rank and purity but never removes it (256: purity 55/60, worst rank 3; 512: 55/60, worst 2; 1024: 54/60, all ranks 1). **512/80 stays the default**; the Q3/Q8 fix needs retrieval-side discrimination — hybrid or reranking, the next roadmap item. Full analysis: `docs/showcase/eval/2026-07-19-chunking-comparison.md`.
 - `run_starter_eval` now prints and writes an aggregate summary (purity, mean/worst first-hit rank) via `summarize_judgments()` in `app/eval/basic_eval.py` — per-run artifacts are one-glance comparable. Tested in `tests/test_basic_eval.py`.
@@ -41,8 +42,8 @@ source .venv/bin/activate
 
 1. ~~**Baseline eval runner**~~ — done 2026-07-18: 4/4 hit@4 (saturated — see artifact).
 2. ~~**Expand eval set**~~ — done 2026-07-18: 15 questions; hit@4 still 100% (structurally so), gating metrics now purity 55/60 and first-hit rank (worst 2).
-3. **Measured iterations — now the priority** — ~~chunking~~ (done 2026-07-19, null result), ~~hybrid retrieval~~ (done 2026-07-19, rejected on evidence), reranking (next); each with before/after vs the eval set, judged on purity and first-hit rank (hit@4 will read 100% → 100% regardless).
-4. **UI polish** — retrieval inspector, demo-ready Streamlit; capture screenshots/GIF.
+3. ~~**Measured iterations**~~ — **complete 2026-07-19**: ~~chunking~~ (null), ~~hybrid~~ (rejected), ~~reranking~~ (split decision, opt-in). Three mechanisms — geometry, lexical, reader — bound the residual impurity as content ambiguity; retrieval-side work on this corpus is closed.
+4. **UI polish — now the priority** — retrieval inspector, demo-ready Streamlit; capture screenshots/GIF.
 5. **Case-study assembly** — architecture diagram, narrative, export for website.
 
 ## Most important learnings so far
@@ -61,3 +62,7 @@ source .venv/bin/activate
 - When both retrievers agree on the wrong answer, no fusion can save you: BM25 fails the Q8 vocabulary trap with the same wrong ranking as dense, because the confusable chapters share their *distinctive* terms too. Rank fusion only helps where the retrievers disagree and the added one is right often enough.
 - An eval set designed to defeat one retriever's weakness (paraphrase vs dense) also stress-tests every later feature — BM25's 72% purity on paraphrased questions was predictable in hindsight; check a new component alone (the free BM25-only diagnostic) before blaming the fusion.
 - Negative results compound: chunking ruled out geometry, hybrid ruled out lexical signal — two cheap nulls narrowed the fix to rerankers more convincingly than one win would have.
+- A reranker can only reorder what the candidate generator hands it — and the wider pool that lets it fix one question (Q8's four on-target chunks in the top-12) gives it rope to hang itself on another (Q5's two plausible off-target chunks). Candidate depth is a real hyperparameter, not just headroom.
+- A nondeterministic component demands repeat runs before judging: one 15-question run can't tell a +1 purity win from sampling luck. Two runs separated the stable effects (Q3 gain, Q8 rank fix, Q5 regression) from ±1 jitter (Q8/Q9/Q13).
+- Check which deployment an env var points at before estimating LLM cost — `AZURE_OPENAI_CHAT_DEPLOYMENT` turned out to be full-size `gpt-4o`, ~15× the assumed mini-tier price ($0.21 vs $0.015 per rerank run).
+- When three different mechanisms leave the same residual error, stop blaming the component and re-examine the labels: the surviving ~8% impurity is chunks from chapters that genuinely discuss overlapping material. Knowing when a metric has hit its content ceiling is itself a finding.
