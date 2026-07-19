@@ -24,7 +24,12 @@ from app.eval.basic_eval import (
     load_starter_eval_cases,
     summarize_judgments,
 )
-from app.retrieval.search import search_chunks
+from app.retrieval.lexical import Bm25Index, load_corpus
+from app.retrieval.search import (
+    CANDIDATE_MULTIPLIER,
+    search_chunks,
+    search_chunks_hybrid,
+)
 
 STARTER_EVAL_PATH = PROJECT_ROOT / "data" / "eval" / "chapters_4_6_starter.json"
 DEFAULT_OUTPUT_PATH = (
@@ -76,11 +81,21 @@ def _format_rank(rank: float | int | None) -> str:
     return f"{rank:.2f}" if isinstance(rank, float) else str(rank)
 
 
+def _retrieval_description(mode: str, config: AppConfig) -> str:
+    if mode == "hybrid":
+        return (
+            f"hybrid (dense + BM25, RRF k=60, "
+            f"{config.top_k * CANDIDATE_MULTIPLIER} candidates/side) top-{config.top_k}"
+        )
+    return f"dense top-{config.top_k}"
+
+
 def render_markdown(
     judgments: list[RetrievalJudgment],
     config: AppConfig,
     *,
     title: str = "Retrieval eval",
+    mode: str = "dense",
 ) -> str:
     summary = summarize_judgments(judgments)
     hits = summary.hit_count
@@ -99,7 +114,7 @@ def render_markdown(
         "",
         f"- Collection: `{config.qdrant_collection_name}` (local embedded Qdrant)",
         f"- Chunking: size {config.chunk_size}, overlap {config.chunk_overlap}",
-        f"- Retrieval: dense top-{config.top_k}",
+        f"- Retrieval: {_retrieval_description(mode, config)}",
         f"- Embeddings: `{config.embedding_deployment_name}`",
         "",
         "## Summary",
@@ -155,6 +170,12 @@ def main() -> None:
         default="Retrieval eval",
         help='Artifact H1 title (default: "Retrieval eval")',
     )
+    parser.add_argument(
+        "--mode",
+        choices=["dense", "hybrid"],
+        default="dense",
+        help="Retrieval path: dense (default) or hybrid (dense + BM25 via RRF)",
+    )
     args = parser.parse_args()
 
     config = AppConfig.from_env()
@@ -165,10 +186,24 @@ def main() -> None:
             "Run `.venv/bin/python -m app.indexing.build_index` first."
         )
 
+    bm25_index = None
+    if args.mode == "hybrid":
+        corpus = load_corpus(qdrant_client, config.qdrant_collection_name)
+        bm25_index = Bm25Index(corpus)
+        print(f"BM25 index built over {len(corpus)} chunks (local, no API).")
+
     cases = load_starter_eval_cases(STARTER_EVAL_PATH)
     judgments = []
     for case in cases:
-        chunks = search_chunks(case.question, config=config, client=qdrant_client)
+        if bm25_index is not None:
+            chunks = search_chunks_hybrid(
+                case.question,
+                config=config,
+                bm25_index=bm25_index,
+                client=qdrant_client,
+            )
+        else:
+            chunks = search_chunks(case.question, config=config, client=qdrant_client)
         judgments.append(
             judge_retrieval(case, [chunk.file_name for chunk in chunks])
         )
@@ -177,7 +212,8 @@ def main() -> None:
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
-        render_markdown(judgments, config, title=args.title), encoding="utf-8"
+        render_markdown(judgments, config, title=args.title, mode=args.mode),
+        encoding="utf-8",
     )
     print(f"\nArtifact written: {args.out}")
 

@@ -21,6 +21,7 @@ Stack: Python, LlamaIndex Core, Qdrant (local embedded), Azure OpenAI (separate 
 | Baseline measured | 2026-07-18 | 4/4 (100%) hit@4 | starter set saturated — all first hits at rank 1; eval set must get harder before features can show gains ([details](eval/2026-07-18-baseline.md)) |
 | Eval set expanded 4 → 15 | 2026-07-18 | 15/15 (100%) hit@4, purity 55/60 (92%) | hit@4 turns out to be structurally unmissable at chapter level on a 3-file corpus; purity and first-hit rank (worst: 2, on the designed Ch5/Ch6 trap) are now the metrics features must move ([details](eval/2026-07-18-expanded-set.md)) |
 | Chunking sweep (256/512/1024) | 2026-07-19 | purity 92% / 92% / 90%, mean rank 1.13 / 1.07 / 1.00 | first measured feature iteration — and a deliberate null result: chunk size redistributes the Ch5/Ch6 confusion between rank and purity but never removes it; 512/80 kept, fix deferred to hybrid/reranking ([details](eval/2026-07-19-chunking-comparison.md)) |
+| Hybrid retrieval (dense + BM25, RRF) | 2026-07-19 | purity 92% (dense) vs 87% (hybrid) vs 72% (BM25-only) | second negative result, hybrid rejected on evidence: the lexical side is strictly weaker on a paraphrase-heavy eval set and fails the Ch5/Ch6 trap identically to dense, so equal-weight fusion pollutes four clean questions to gain one chunk; dense stays, and two nulls now triangulate the fix to reranking ([details](eval/2026-07-19-hybrid-comparison.md)) |
 
 ## Interesting failures and fixes
 
@@ -49,6 +50,16 @@ _Populating from eval near-misses; this section is where the story lives._
   lesson: purity fractions aren't comparable across chunk sizes — 2/4 of
   512-token chunks and 1/4 of 1024-token chunks are the *same* on-target
   tokens in twice the context. (2026-07-19)
+- **When both retrievers agree on the wrong answer, no fusion can save you.**
+  Hybrid dense+BM25 via reciprocal rank fusion was supposed to separate the
+  confusable chapters through distinctive-term weighting. Measured: BM25-only
+  purity 72% vs dense 92% on a deliberately paraphrase-heavy eval set, and on
+  the worst question (Q8) BM25 produced the *same* wrong ranking as dense —
+  the chapters share their distinctive vocabulary too. Equal-weight RRF
+  therefore averaged a strong ranking with a weak one: one chunk gained, four
+  lost. The negative result is more useful than a win would have been: chunk
+  geometry and lexical signal are both ruled out, which narrows the fix to a
+  reranker that reads candidate text against the question. (2026-07-19)
 
 ## Key engineering decisions
 

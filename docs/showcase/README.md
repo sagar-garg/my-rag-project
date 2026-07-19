@@ -18,3 +18,6 @@ Raw material for the portfolio case study (target: personal website). Collected 
 | 2026-07-19 | [eval/2026-07-19-chunking-512.md](eval/2026-07-19-chunking-512.md) | Sweep baseline leg (512/80): purity 55/60, mean rank 1.07 — identical to 2026-07-18, confirming retrieval determinism |
 | 2026-07-19 | [eval/2026-07-19-chunking-256.md](eval/2026-07-19-chunking-256.md) | Sweep small leg (256/40, 386 chunks): purity unchanged, ranks worse (Q3 → rank 3) |
 | 2026-07-19 | [eval/2026-07-19-chunking-1024.md](eval/2026-07-19-chunking-1024.md) | Sweep large leg (1024/160, 85 chunks): all ranks 1 and Q13 cleaned, but Q3/Q8 purity diluted to 1/4 |
+| 2026-07-19 | [eval/2026-07-19-hybrid-comparison.md](eval/2026-07-19-hybrid-comparison.md) | Hybrid verdict: equal-weight RRF regresses purity 92% → 87% because the lexical side is strictly weaker (BM25-only 72%) and fails the Q8 trap identically to dense — dense stays, evidence now points to reranking |
+| 2026-07-19 | [eval/2026-07-19-hybrid-dense-control.md](eval/2026-07-19-hybrid-dense-control.md) | Hybrid iteration control leg: reproduces the 512/80 baseline exactly (55/60, mean 1.07) |
+| 2026-07-19 | [eval/2026-07-19-hybrid-rrf.md](eval/2026-07-19-hybrid-rrf.md) | Hybrid leg (dense + BM25, RRF k=60): 52/60 — one Q3 gain, four collateral losses, Q8 unmoved |
