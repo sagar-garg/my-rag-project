@@ -4,12 +4,12 @@
 
 - ~~Build the baseline eval runner~~ — done 2026-07-18: 4/4 hit@4, saturated (`docs/showcase/eval/2026-07-18-baseline.md`).
 - ~~Expand the eval set to ~12–15 harder questions~~ — done 2026-07-18: 15 questions (`docs/showcase/eval/2026-07-18-expanded-set.md`). Hit@4 is structurally saturated at chapter level; **purity (55/60) and first-hit rank (worst: 2) are now the gating metrics** for all feature work.
-- **First measured iteration: chunking parameters** vs the 15-question set, judged on purity/first-hit rank. Weak questions to watch: Q3, Q8, Q13.
-- Add aggregate purity + mean first-hit rank to the runner's summary output (makes per-run comparison one-glance).
+- ~~First measured iteration: chunking parameters~~ — done 2026-07-19: null result, 512/80 stays; chunk size redistributes the Ch5/Ch6 confusion, doesn't remove it (`docs/showcase/eval/2026-07-19-chunking-comparison.md`).
+- ~~Add aggregate purity + mean first-hit rank to the runner's summary output~~ — done 2026-07-19 (`summarize_judgments`, Summary block in artifacts).
+- **Hybrid retrieval (dense + lexical) with before/after numbers** — the chunking sweep points here: Q3/Q8 need chapter *discrimination*, which lexical scoring may provide. See `prompts/current/next-chat.md`.
 
 ## Medium-term (showcase-first, eval-gated — ADR 005)
 
-- Hybrid retrieval (dense + sparse) with before/after numbers.
 - Reranking, if eval misses show dense/hybrid retrieval is the bottleneck.
 - Streamlit retrieval inspector: show scores, chunk boundaries, expected-vs-actual sources for eval questions.
 - Answer-quality metrics via Ragas (faithfulness, answer relevancy) once retrieval is stable.
@@ -23,7 +23,6 @@
 
 ## Later ideas
 
-- Compare chunk sizes/overlaps systematically.
 - Document quality checklist before indexing new corpora.
 - Section-level or chunk-level gold labels — only if purity/rank stop discriminating; would let hit@k actually fail on this corpus.
 

@@ -1,10 +1,13 @@
 from pathlib import Path
 
+import pytest
+
 from app.eval.basic_eval import (
     StarterEvalCase,
     build_eval_sample,
     judge_retrieval,
     load_starter_eval_cases,
+    summarize_judgments,
 )
 
 
@@ -92,6 +95,42 @@ def test_judge_retrieval_miss() -> None:
     assert judgment.hit is False
     assert judgment.first_hit_rank is None
     assert judgment.on_target_count == 0
+
+
+def test_summarize_judgments_aggregates_purity_and_ranks() -> None:
+    ch4 = "Chapter_4_Evaluate_AI_Systems.pdf"
+    ch5 = "Chapter_5_Prompt_Engineering.pdf"
+    judgments = [
+        judge_retrieval(_case([ch4]), [ch4, ch4, ch5, ch4]),
+        judge_retrieval(_case([ch5]), [ch4, ch5, ch5, ch4]),
+        judge_retrieval(_case([ch5]), [ch4, ch4, ch4, ch4]),
+    ]
+
+    summary = summarize_judgments(judgments)
+
+    assert summary.question_count == 3
+    assert summary.hit_count == 2
+    assert summary.on_target_total == 5
+    assert summary.retrieved_total == 12
+    assert summary.mean_first_hit_rank == pytest.approx(1.5)
+    assert summary.worst_first_hit_rank == 2
+
+
+def test_summarize_judgments_all_misses_has_no_ranks() -> None:
+    ch4 = "Chapter_4_Evaluate_AI_Systems.pdf"
+    ch5 = "Chapter_5_Prompt_Engineering.pdf"
+    judgments = [judge_retrieval(_case([ch5]), [ch4, ch4])]
+
+    summary = summarize_judgments(judgments)
+
+    assert summary.hit_count == 0
+    assert summary.mean_first_hit_rank is None
+    assert summary.worst_first_hit_rank is None
+
+
+def test_summarize_judgments_rejects_empty_list() -> None:
+    with pytest.raises(ValueError):
+        summarize_judgments([])
 
 
 def test_judge_retrieval_multiple_target_sources() -> None:

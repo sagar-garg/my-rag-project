@@ -106,6 +106,47 @@ def judge_retrieval(
     )
 
 
+@dataclass(frozen=True)
+class RetrievalSummary:
+    """Aggregate retrieval metrics across an eval run.
+
+    Rank aggregates cover only questions with at least one on-target chunk;
+    they are None when every question missed.
+    """
+
+    question_count: int
+    hit_count: int
+    on_target_total: int
+    retrieved_total: int
+    mean_first_hit_rank: float | None
+    worst_first_hit_rank: int | None
+
+
+def summarize_judgments(judgments: list[RetrievalJudgment]) -> RetrievalSummary:
+    """Aggregate per-question judgments into run-level metrics."""
+
+    if not judgments:
+        raise ValueError("At least one judgment is required.")
+
+    first_hit_ranks = [
+        judgment.first_hit_rank
+        for judgment in judgments
+        if judgment.first_hit_rank is not None
+    ]
+    return RetrievalSummary(
+        question_count=len(judgments),
+        hit_count=sum(1 for judgment in judgments if judgment.hit),
+        on_target_total=sum(judgment.on_target_count for judgment in judgments),
+        retrieved_total=sum(
+            len(judgment.retrieved_file_names) for judgment in judgments
+        ),
+        mean_first_hit_rank=(
+            sum(first_hit_ranks) / len(first_hit_ranks) if first_hit_ranks else None
+        ),
+        worst_first_hit_rank=max(first_hit_ranks) if first_hit_ranks else None,
+    )
+
+
 def build_eval_sample(
     case: StarterEvalCase,
     *,

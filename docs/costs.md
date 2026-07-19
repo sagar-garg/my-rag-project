@@ -29,6 +29,7 @@ the Azure portal (Cost Management) if precision ever matters.
 | 2026-04 | Initial builds: smoke corpus + chapters 4–6 (~2 full builds) | ~$0.004 | $0.004 |
 | 2026-07-18 | Baseline eval (4 query embeds) | <$0.0001 | $0.004 |
 | 2026-07-18 | Expanded eval (15 query embeds) | <$0.0001 | $0.004 |
+| 2026-07-19 | Chunking sweep: 2 index builds (386 + 85 chunks ≈ 190k tokens) + 3 eval runs (45 query embeds) | ~$0.004 | $0.008 |
 
 **Total to date: well under one cent** (excluding any manual Streamlit chat
 queries, which were not tracked — each is roughly fractions of a cent on a
@@ -36,7 +37,10 @@ mini-tier deployment).
 
 ## Projections
 
-- Chunking sweep (next session): 2 extra index builds + 2 eval runs ≈ **+$0.004**.
+- ~~Chunking sweep~~ — done 2026-07-19, landed on the estimate (+$0.004).
+- Hybrid retrieval (BM25 + dense) adds no API cost — the lexical side is local;
+  eval runs stay at ~query-embed cost. An LLM reranker would add chat calls;
+  a local cross-encoder would not.
 - The first meaningful cost driver on the roadmap is **Ragas LLM-judge metrics**
   (faithfulness, answer relevancy): one chat call per question per metric per
   run. Estimate before running at scale.

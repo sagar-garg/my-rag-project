@@ -22,6 +22,7 @@ from app.eval.basic_eval import (
     RetrievalJudgment,
     judge_retrieval,
     load_starter_eval_cases,
+    summarize_judgments,
 )
 from app.retrieval.search import search_chunks
 
@@ -60,8 +61,19 @@ def print_report(judgments: list[RetrievalJudgment], top_k: int) -> None:
             f"{result:<7} {rank:<5} {judgment.on_target_count}/{len(judgment.retrieved_file_names)}"
         )
 
-    hits = sum(1 for judgment in judgments if judgment.hit)
-    print(f"\nHit rate: {hits}/{len(judgments)} ({hits / len(judgments):.0%})")
+    summary = summarize_judgments(judgments)
+    print(f"\nHit rate: {summary.hit_count}/{summary.question_count} "
+          f"({summary.hit_count / summary.question_count:.0%})")
+    print(f"Purity: {summary.on_target_total}/{summary.retrieved_total} "
+          f"({summary.on_target_total / summary.retrieved_total:.0%})")
+    print(f"First-hit rank: mean {_format_rank(summary.mean_first_hit_rank)}, "
+          f"worst {_format_rank(summary.worst_first_hit_rank)}")
+
+
+def _format_rank(rank: float | int | None) -> str:
+    if rank is None:
+        return "—"
+    return f"{rank:.2f}" if isinstance(rank, float) else str(rank)
 
 
 def render_markdown(
@@ -70,8 +82,9 @@ def render_markdown(
     *,
     title: str = "Retrieval eval",
 ) -> str:
-    hits = sum(1 for judgment in judgments if judgment.hit)
-    total = len(judgments)
+    summary = summarize_judgments(judgments)
+    hits = summary.hit_count
+    total = summary.question_count
 
     lines = [
         f"# {title} — {date.today().isoformat()}",
@@ -88,6 +101,16 @@ def render_markdown(
         f"- Chunking: size {config.chunk_size}, overlap {config.chunk_overlap}",
         f"- Retrieval: dense top-{config.top_k}",
         f"- Embeddings: `{config.embedding_deployment_name}`",
+        "",
+        "## Summary",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| Hit@{config.top_k} | {hits}/{total} ({hits / total:.0%}) |",
+        f"| Purity (on-target chunks) | {summary.on_target_total}/{summary.retrieved_total} "
+        f"({summary.on_target_total / summary.retrieved_total:.0%}) |",
+        f"| Mean first-hit rank | {_format_rank(summary.mean_first_hit_rank)} |",
+        f"| Worst first-hit rank | {_format_rank(summary.worst_first_hit_rank)} |",
         "",
         "## Per-question results",
         "",
