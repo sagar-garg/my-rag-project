@@ -602,11 +602,16 @@ independently.
 
 **The result (gpt-4o as reranker, run twice because it's nondeterministic):**
 
-- **Q8 finally moved: rank 2 → 1, stable across both runs.** The first change in
-  three iterations to crack the acid test. (Its four on-target chunks *were* in the
-  top-12; dense just ranked them below the Ch6 distractors, and a reader could tell
-  them apart.)
-- **Q3 fixed to 4/4.**
+- **Q8's *rank* finally moved: 2 → 1, stable across both runs** — the first change
+  in three iterations to crack the acid test. But read it precisely, because this
+  is where it's easy to lie: the reranker **reordered the chunks dense already
+  had**, it did not recover new on-target passages. In run 1 the top-4 was the
+  *same* two-Ch5 / two-Ch6 multiset as dense, merely reordered to put a Ch5 chunk
+  first — rank 2 → 1, **purity unchanged at 2/4**. (Run 2 happened to pull one more
+  Ch5 from the wider pool, 3/4 — jitter, not a stable gain.) So the reranker fixed
+  Q8's *ranking*, not its *purity*: Q8 was reordered, not solved. Claiming it
+  "fixed Q8" would overstate what the numbers show.
+- **Q3 fixed to 4/4** (a genuine purity gain, stable across runs).
 - **But Q5 stably regressed** — a question dense had perfect. Widening the pool
   from 4 to 12 surfaced two *plausible-reading* off-target chunks, and the
   reranker promoted one.
@@ -670,9 +675,10 @@ have, for ~$1 total.
 The Streamlit inspector turns the eval table into a live demo: for any question it
 shows each retrieved chunk's chapter, score, and a ✅/❌ against the gold set, plus
 a hit/rank/purity banner — with a dense/hybrid/rerank toggle. The Q8 trap and its
-rerank fix, on screen: dense mode ranks a Chapter 6 chunk first (❌), toggle to
-rerank and the Chapter 5 passage is promoted to rank 1 (✅). Screenshots and a GIF
-are in `docs/showcase/assets/`.
+rerank *reordering*, on screen: dense mode ranks a Chapter 6 chunk first (❌),
+toggle to rerank and a Chapter 5 passage is promoted to rank 1 (✅) — note the
+purity banner barely moves, because (as above) the reranker is reordering the same
+chunks, not cleaning the set. Screenshots and a GIF are in `docs/showcase/assets/`.
 
 ---
 
@@ -733,10 +739,11 @@ precisely because cosine (0–1) and BM25 (unbounded) live on different scales �
 rank fusion needs no normalization between them.
 
 **Q: You added an LLM reranker — outcome?**
-Split decision. It reads the top-12 dense candidates and re-orders them. It was
-the first thing to fix my acid-test question (rank 2 → 1, stably), but it broke a
-question dense had perfect — the wider candidate pool surfaced a plausible
-distractor. Net aggregate ≈ zero. Two lessons: a reranker can only reorder what
+Split decision. It reads the top-12 dense candidates and re-orders them. It was the
+first thing to move my acid-test question's *rank* (Q8, 2 → 1, stably) — though
+that was a reordering of the chunks dense already had, not a purity fix — and it
+fully fixed Q3, but it broke a question dense had perfect (Q5), because the wider
+candidate pool surfaced a plausible distractor. Net aggregate ≈ zero. Two lessons: a reranker can only reorder what
 the candidate generator hands it, and candidate depth is a hyperparameter with a
 failure mode. Kept opt-in.
 
@@ -855,7 +862,7 @@ located the real limit for about a dollar.
 
 ---
 
-*This document reflects the project as of 2026-07-19. For the recruiter-facing
+*This document reflects the project as of 2026-07-19. For the public case-study
 version see `docs/showcase/case-study.md`; for the decision records see
 `docs/decisions/`; for the measured experiments in full see
 `docs/showcase/eval/`.*
