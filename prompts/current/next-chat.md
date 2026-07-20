@@ -21,4 +21,6 @@ Requirements:
 - Any eval run deposits its artifact in `docs/showcase/eval/` per the artifact habit.
 - End with /handoff.
 
-Parked: website integration of the case study (belongs to the website repo); rerank `reasoning={"effort": "low"}` knob (only if rerank mode gets interactive use).
+**Done (2026-07-20): website integration of the case study.** Built as a native page in the portfolio repo (`showcase-my-vision`) at `/projects/rag-first-principles` — no export tooling needed here, the markdown-as-is decision held. Note for anyone regenerating assets: the architecture SVG and the Q8 inspector screenshots were *not* usable on the site (the SVG is `fill:#000000` on transparent at 2229×477, invisible on a dark page; the light-theme Streamlit PNGs were illegible at half-column width), so both were rebuilt natively in JSX from the underlying numbers. Only `2026-07-19-mode-toggle.gif` was consumed as an asset. If a future asset is meant for the website, render it dark-theme-safe and closer to 1:1.
+
+Parked: rerank `reasoning={"effort": "low"}` knob (only if rerank mode gets interactive use).
